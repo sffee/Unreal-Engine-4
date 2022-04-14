@@ -26,21 +26,24 @@ AMyPlayer::AMyPlayer()
 	if (AnimBlueprint.Succeeded())
 		GetMesh()->SetAnimInstanceClass(AnimBlueprint.Class);
 
-	AddAnimMontage(TEXT("AnimMontage'/Game/BlueprintClass/Player/Montage/AM_Run.AM_Run'"));
-	AddAnimMontage(TEXT("AnimMontage'/Game/BlueprintClass/Player/Montage/AM_Run_End.AM_Run_End'"));
-	AddAnimMontage(TEXT("AnimMontage'/Game/BlueprintClass/Player/Montage/AM_ComboA_1.AM_ComboA_1'"));
-	AddAnimMontage(TEXT("AnimMontage'/Game/BlueprintClass/Player/Montage/AM_ComboA_2.AM_ComboA_2'"));
-	AddAnimMontage(TEXT("AnimMontage'/Game/BlueprintClass/Player/Montage/AM_ComboA_3.AM_ComboA_3'"));
-	AddAnimMontage(TEXT("AnimMontage'/Game/BlueprintClass/Player/Montage/AM_ComboA_4.AM_ComboA_4'"));
-	AddAnimMontage(TEXT("AnimMontage'/Game/BlueprintClass/Player/Montage/AM_ComboA_5.AM_ComboA_5'"));
-	AddAnimMontage(TEXT("AnimMontage'/Game/BlueprintClass/Player/Montage/AM_ComboA_6.AM_ComboA_6'"));
+	ConstructorHelpers::FObjectFinder<UDataTable> MontageTable(TEXT("DataTable'/Game/BlueprintClass/Player/DataTable/PlayerMontageTable.PlayerMontageTable'"));
+	if (MontageTable.Succeeded())
+		m_MontageTable = MontageTable.Object;
+
+	ConstructorHelpers::FObjectFinder<UDataTable> AttackMoveTable(TEXT("DataTable'/Game/BlueprintClass/Player/DataTable/PlayerAttackMoveTable.PlayerAttackMoveTable'"));
+	if (AttackMoveTable.Succeeded())
+		m_AttackMoveTable = AttackMoveTable.Object;
 }
 
-void AMyPlayer::AddAnimMontage(const FString _FileName)
+void AMyPlayer::PlayMontage(EPLAYER_STATE _State)
 {
-	ConstructorHelpers::FObjectFinder<UAnimMontage> Montage(*_FileName);
-	if (Montage.Succeeded())
-		m_arrMontage.Add(Montage.Object);
+	FName RowName = m_MontageMap.FindRef(_State);
+
+	FPlayerMontageInfo* MontageInfo = m_MontageTable->FindRow<FPlayerMontageInfo>(RowName, TEXT(""));
+	if (MontageInfo != nullptr)
+	{
+		m_AnimInst->Montage_Play(MontageInfo->Montage);
+	}
 }
 
 void AMyPlayer::BeginPlay()
@@ -48,6 +51,15 @@ void AMyPlayer::BeginPlay()
 	Super::BeginPlay();
 
 	m_AnimInst = Cast<UPlayerAnimInstance>(GetMesh()->GetAnimInstance());
+
+	FString Str;
+	TArray<FPlayerMontageInfo*> AllRows;
+	m_MontageTable->GetAllRows<FPlayerMontageInfo>(Str, AllRows);
+
+	TArray<FName> AllRowNames = m_MontageTable->GetRowNames();;
+
+	for (int i = 0; i < AllRows.Num(); i++)
+		m_MontageMap.Add(AllRows[i]->State, AllRowNames[i]);
 }
 
 void AMyPlayer::Tick(float DeltaTime)
@@ -86,10 +98,9 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState)
 
 	m_State = _NextState;
 
-	if (EPLAYER_STATE::COMBO_A_1 <= m_State && m_State <= EPLAYER_STATE::COMBO_A_6)
+	if (EPLAYER_STATE::COMBO_A_1 <= m_State && m_State <= EPLAYER_STATE::COMBO_A_5)
 	{
 		m_AttackCancleable = false;
-		AttackMoveSpeedSetting(_NextState);
 	}
 
 	switch (m_State)
@@ -98,28 +109,25 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState)
 		GetCharacterMovement()->MaxWalkSpeed = 800.f;
 		GetCharacterMovement()->MaxAcceleration = 2048.f;
 		GetCharacterMovement()->bUseSeparateBrakingFriction = true;
-		m_AnimInst->Montage_Play(m_arrMontage[(int)EMONTAGE::RUN]);
+		PlayMontage(EPLAYER_STATE::RUN);
 		break;
 	case EPLAYER_STATE::RUN_END:
-		m_AnimInst->Montage_Play(m_arrMontage[(int)EMONTAGE::RUN_END]);
+		PlayMontage(EPLAYER_STATE::RUN_END);
 		break;
 	case EPLAYER_STATE::COMBO_A_1:
-		m_AnimInst->Montage_Play(m_arrMontage[(int)EMONTAGE::COMBO_A_1]);
+		PlayMontage(EPLAYER_STATE::COMBO_A_1);
 		break;
 	case EPLAYER_STATE::COMBO_A_2:
-		m_AnimInst->Montage_Play(m_arrMontage[(int)EMONTAGE::COMBO_A_2]);
+		PlayMontage(EPLAYER_STATE::COMBO_A_2);
 		break;
 	case EPLAYER_STATE::COMBO_A_3:
-		m_AnimInst->Montage_Play(m_arrMontage[(int)EMONTAGE::COMBO_A_3]);
+		PlayMontage(EPLAYER_STATE::COMBO_A_3);
 		break;
 	case EPLAYER_STATE::COMBO_A_4:
-		m_AnimInst->Montage_Play(m_arrMontage[(int)EMONTAGE::COMBO_A_4]);
+		PlayMontage(EPLAYER_STATE::COMBO_A_4);
 		break;
 	case EPLAYER_STATE::COMBO_A_5:
-		m_AnimInst->Montage_Play(m_arrMontage[(int)EMONTAGE::COMBO_A_5]);
-		break;
-	case EPLAYER_STATE::COMBO_A_6:
-		m_AnimInst->Montage_Play(m_arrMontage[(int)EMONTAGE::COMBO_A_6]);
+		PlayMontage(EPLAYER_STATE::COMBO_A_5);
 		break;
 	case EPLAYER_STATE::JUMP:
 		break;
@@ -138,41 +146,25 @@ void AMyPlayer::AttackMoveSpeedSetting(EPLAYER_STATE _State)
 {
 	GetCharacterMovement()->Velocity = FVector::ZeroVector;
 
-	switch (m_State)
+	FName RowName = m_MontageMap.FindRef(_State);
+
+	FPlayerMontageInfo* MontageInfo = m_MontageTable->FindRow<FPlayerMontageInfo>(RowName, TEXT(""));
+	if (MontageInfo != nullptr)
 	{
-	case EPLAYER_STATE::COMBO_A_1:
-		GetCharacterMovement()->MaxWalkSpeed = 2000.f;
-		GetCharacterMovement()->MaxAcceleration = 1500.f;
-		GetCharacterMovement()->bUseSeparateBrakingFriction = false;
-		break;
-	case EPLAYER_STATE::COMBO_A_2:
-		GetCharacterMovement()->MaxWalkSpeed = 2000.f;
-		GetCharacterMovement()->MaxAcceleration = 2000.f;
-		break;
-	case EPLAYER_STATE::COMBO_A_3:
-		GetCharacterMovement()->MaxWalkSpeed = 1000.f;
-		GetCharacterMovement()->MaxAcceleration = 2200.f;
-		break;
-	case EPLAYER_STATE::COMBO_A_4:
-		GetCharacterMovement()->MaxWalkSpeed = 1500.f;
-		GetCharacterMovement()->MaxAcceleration = 2500.f;
-		break;
-	case EPLAYER_STATE::COMBO_A_5:
-		GetCharacterMovement()->MaxWalkSpeed = 2000.f;
-		GetCharacterMovement()->MaxAcceleration = 2500.f;
-		break;
-	case EPLAYER_STATE::COMBO_A_6:
-		GetCharacterMovement()->MaxWalkSpeed = 2000.f;
-		GetCharacterMovement()->MaxAcceleration = 4000.f;
-		break;
-	default:
-		break;
+		FName Section = m_AnimInst->Montage_GetCurrentSection(MontageInfo->Montage);
+		FAttackMoveInfo* AttackMoveInfo = m_AttackMoveTable->FindRow<FAttackMoveInfo>(Section, TEXT(""));
+		if (AttackMoveInfo != nullptr)
+		{
+			GetCharacterMovement()->MaxWalkSpeed = AttackMoveInfo->MaxWalkSpeed;
+			GetCharacterMovement()->MaxAcceleration = AttackMoveInfo->MaxAcceleration;
+			GetCharacterMovement()->bUseSeparateBrakingFriction = AttackMoveInfo->UseSeparateBrakingFriction;
+		}
 	}
 }
 
 void AMyPlayer::MoveFront(float _Scale)
 {
-	if (EPLAYER_STATE::COMBO_A_1 <= m_State && m_State <= EPLAYER_STATE::COMBO_A_6)
+	if (EPLAYER_STATE::COMBO_A_1 <= m_State && m_State <= EPLAYER_STATE::COMBO_A_5)
 	{
 		if (_Scale != 0.f && m_Moveable == true)
 		{
@@ -180,7 +172,7 @@ void AMyPlayer::MoveFront(float _Scale)
 		}
 	}
 
-	if (m_State == EPLAYER_STATE::IDLE && _Scale != 0.f)
+	if ((m_State == EPLAYER_STATE::IDLE || m_State == EPLAYER_STATE::RUN_END) && _Scale != 0.f)
 	{
 		ChangeState(EPLAYER_STATE::RUN);
 	}
@@ -188,10 +180,6 @@ void AMyPlayer::MoveFront(float _Scale)
 	{
 		ChangeState(EPLAYER_STATE::RUN_END);
 	}
-
-	FString Str;
-	Str = FString::SanitizeFloat(_Scale);
-	LOG(Warning, *Str)
 
 	AddMovementInput(GetActorForwardVector(), _Scale);
 }
@@ -229,14 +217,14 @@ void AMyPlayer::JumpAction()
 void AMyPlayer::AttackAction()
 {
 	if (EPLAYER_STATE::COMBO_A_1 <= m_State
-		&& m_State < EPLAYER_STATE::COMBO_A_6)
+		&& m_State < EPLAYER_STATE::COMBO_A_5)
 	{
 		if (m_AttackCancleable == true)
 		{
 			ChangeState((EPLAYER_STATE)((int)m_State + 1));
 		}
 	}
-	else if (m_State == EPLAYER_STATE::COMBO_A_6)
+	else if (m_State == EPLAYER_STATE::COMBO_A_5)
 	{
 		if (m_AttackCancleable == true)
 		{

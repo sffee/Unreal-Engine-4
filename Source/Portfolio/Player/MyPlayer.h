@@ -2,26 +2,11 @@
 
 #pragma once
 
-#include "../Etc/global.h"
-
 #include "PlayerAnimInstance.h"
 
 #include "CoreMinimal.h"
 #include "../CharacterBase.h"
 #include "MyPlayer.generated.h"
-
-UENUM()
-enum class EMONTAGE : uint8
-{
-	RUN,
-	RUN_END,
-	COMBO_A_1,
-	COMBO_A_2,
-	COMBO_A_3,
-	COMBO_A_4,
-	COMBO_A_5,
-	COMBO_A_6
-};
 
 UCLASS()
 class PORTFOLIO_API AMyPlayer : public ACharacterBase
@@ -37,10 +22,13 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = State, meta = (AllowPrivateAccess = "true"))
 	EPLAYER_STATE m_State;
-	
-	UPlayerAnimInstance* m_AnimInst;
 
-	TArray<UAnimMontage*> m_arrMontage;
+	UDataTable* m_MontageTable;
+	TMap<EPLAYER_STATE, FName> m_MontageMap;
+
+	UDataTable* m_AttackMoveTable;
+
+	UPlayerAnimInstance* m_AnimInst;
 
 	bool m_AttackMove;
 	bool m_AttackCancleable;
@@ -70,7 +58,7 @@ public:
 	}
 
 private:
-	void AddAnimMontage(const FString _FileName);
+	void PlayMontage(EPLAYER_STATE _State);
 
 protected:
 	virtual void BeginPlay() override;
@@ -81,10 +69,10 @@ public:
 
 public:
 	void ChangeState(EPLAYER_STATE _NextState);
+	void AttackMoveSpeedSetting(EPLAYER_STATE _State);
 
 private:
 	void AttackMove();
-	void AttackMoveSpeedSetting(EPLAYER_STATE _State);
 
 private:
 	void MoveFront(float _Scale);

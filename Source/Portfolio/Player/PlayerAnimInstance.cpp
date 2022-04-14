@@ -59,6 +59,7 @@ void UPlayerAnimInstance::AnimNotify_MoveStart()
 	if (Player != nullptr)
 	{
 		Player->SetAttackMove(true);
+		Player->AttackMoveSpeedSetting(m_State);
 	}
 }
 

@@ -16,7 +16,6 @@ enum class EPLAYER_STATE : uint8
 	COMBO_A_3,
 	COMBO_A_4,
 	COMBO_A_5,
-	COMBO_A_6,
 	JUMP,
 	DAMAGE,
 	FALL,
