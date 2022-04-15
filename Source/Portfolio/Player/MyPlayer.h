@@ -33,6 +33,13 @@ private:
 	bool m_AttackMove;
 	bool m_AttackCancleable;
 	bool m_Moveable;
+	
+	bool m_SwordStorage;
+	USkeletalMeshComponent* m_SwordMesh;
+	USkeletalMeshComponent* m_StorageSwordMesh;
+
+	float m_DirAngle;
+	int m_ComboBCount;
 
 public:
 	AMyPlayer();
@@ -57,6 +64,15 @@ public:
 		m_Moveable = _Set;
 	}
 
+public:
+	void ShowSwordStorage(bool _Set);
+	void SetSwordStorage(bool _Set);
+
+	bool GetSwordStorage()
+	{
+		return m_SwordStorage;
+	}
+
 private:
 	void PlayMontage(EPLAYER_STATE _State);
 
@@ -68,8 +84,9 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 public:
-	void ChangeState(EPLAYER_STATE _NextState);
+	void ChangeState(EPLAYER_STATE _NextState, bool _Ignore = false);
 	void AttackMoveSpeedSetting(EPLAYER_STATE _State);
+	void PlayerRotation();
 
 private:
 	void AttackMove();
@@ -83,4 +100,5 @@ private:
 private:
 	void JumpAction();
 	void AttackAction();
+	void AttackRAction();
 };

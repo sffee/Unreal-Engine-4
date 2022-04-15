@@ -17,6 +17,15 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	EPLAYER_STATE m_State;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	float m_Speed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	bool m_SwordStorage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	float m_SwordStorageLinear;
+
 private:
 	UPlayerAnimInstance();
 
@@ -26,10 +35,16 @@ private:
 
 private:
 	UFUNCTION()
-	void AnimNotify_ActionEnd();
+	void AnimNotify_ShowSwordStorage();
 
 	UFUNCTION()
-	void AnimNotify_Run_End();
+	void AnimNotify_SwordStorage();
+
+	UFUNCTION()
+	void AnimNotify_Idle_L();
+
+	UFUNCTION()
+	void AnimNotify_Idle_R();
 
 	UFUNCTION()
 	void AnimNotify_Moveable();
@@ -41,5 +56,5 @@ private:
 	void AnimNotify_MoveStop();
 
 	UFUNCTION()
-	void AnimNotify_Cancleable();
+	void AnimNotify_Attackable();
 };

@@ -4,7 +4,9 @@
 #include "PlayerAnimInstance.h"
 
 UPlayerAnimInstance::UPlayerAnimInstance()
-	: m_State(EPLAYER_STATE::IDLE)
+	: m_State(EPLAYER_STATE::SWORD_IDLE_L)
+	, m_SwordStorage(false)
+	, m_SwordStorageLinear(1.f)
 {
 }
 
@@ -23,24 +25,53 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float _fDT)
 	if (Player != nullptr)
 	{
 		m_State = Player->GetState();
+		m_Speed = Player->GetCharacterMovement()->Velocity.Size();
+		m_SwordStorage = Player->GetSwordStorage();
+	}
+
+	if (m_SwordStorage == true)
+	{
+		m_SwordStorageLinear -= GetWorld()->GetDeltaSeconds() * 3.f;
+
+		if (m_SwordStorageLinear < 0.f)
+			m_SwordStorageLinear = 0.f;
 	}
 }
 
-void UPlayerAnimInstance::AnimNotify_ActionEnd()
+void UPlayerAnimInstance::AnimNotify_ShowSwordStorage()
 {
 	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
 	if (Player != nullptr)
 	{
-		Player->ChangeState(EPLAYER_STATE::IDLE);
+		Player->ShowSwordStorage(true);
+		m_SwordStorageLinear = 1.f;
 	}
 }
 
-void UPlayerAnimInstance::AnimNotify_Run_End()
+void UPlayerAnimInstance::AnimNotify_SwordStorage()
 {
 	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
 	if (Player != nullptr)
 	{
-		Player->ChangeState(EPLAYER_STATE::IDLE);
+		Player->SetSwordStorage(true);
+	}
+}
+
+void UPlayerAnimInstance::AnimNotify_Idle_L()
+{
+	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
+	if (Player != nullptr)
+	{
+		Player->ChangeState(EPLAYER_STATE::SWORD_IDLE_L);
+	}
+}
+
+void UPlayerAnimInstance::AnimNotify_Idle_R()
+{
+	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
+	if (Player != nullptr)
+	{
+		Player->ChangeState(EPLAYER_STATE::SWORD_IDLE_R);
 	}
 }
 
@@ -72,7 +103,7 @@ void UPlayerAnimInstance::AnimNotify_MoveStop()
 	}
 }
 
-void UPlayerAnimInstance::AnimNotify_Cancleable()
+void UPlayerAnimInstance::AnimNotify_Attackable()
 {
 	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
 	if (Player != nullptr)
