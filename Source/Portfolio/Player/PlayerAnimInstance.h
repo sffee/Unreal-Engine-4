@@ -20,12 +20,6 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	float m_Speed;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	bool m_SwordStorage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	float m_SwordStorageLinear;
-
 private:
 	UPlayerAnimInstance();
 
@@ -34,12 +28,6 @@ private:
 	virtual void NativeUpdateAnimation(float _fDT) override;
 
 private:
-	UFUNCTION()
-	void AnimNotify_ShowSwordStorage();
-
-	UFUNCTION()
-	void AnimNotify_SwordStorage();
-
 	UFUNCTION()
 	void AnimNotify_Idle_L();
 

@@ -5,8 +5,6 @@
 
 UPlayerAnimInstance::UPlayerAnimInstance()
 	: m_State(EPLAYER_STATE::SWORD_IDLE_L)
-	, m_SwordStorage(false)
-	, m_SwordStorageLinear(1.f)
 {
 }
 
@@ -26,34 +24,6 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float _fDT)
 	{
 		m_State = Player->GetState();
 		m_Speed = Player->GetCharacterMovement()->Velocity.Size();
-		m_SwordStorage = Player->GetSwordStorage();
-	}
-
-	if (m_SwordStorage == true)
-	{
-		m_SwordStorageLinear -= GetWorld()->GetDeltaSeconds() * 3.f;
-
-		if (m_SwordStorageLinear < 0.f)
-			m_SwordStorageLinear = 0.f;
-	}
-}
-
-void UPlayerAnimInstance::AnimNotify_ShowSwordStorage()
-{
-	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
-	if (Player != nullptr)
-	{
-		Player->ShowSwordStorage(true);
-		m_SwordStorageLinear = 1.f;
-	}
-}
-
-void UPlayerAnimInstance::AnimNotify_SwordStorage()
-{
-	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
-	if (Player != nullptr)
-	{
-		Player->SetSwordStorage(true);
 	}
 }
 

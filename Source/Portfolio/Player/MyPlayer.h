@@ -30,15 +30,13 @@ private:
 
 	UPlayerAnimInstance* m_AnimInst;
 
+	bool m_Attacking;
 	bool m_AttackMove;
 	bool m_AttackCancleable;
 	bool m_Moveable;
 	
-	bool m_SwordStorage;
-	USkeletalMeshComponent* m_SwordMesh;
-	USkeletalMeshComponent* m_StorageSwordMesh;
-
-	float m_DirAngle;
+	bool m_PressMoveSide;
+	bool m_PressMoveFront;
 	int m_ComboBCount;
 
 public:
@@ -64,15 +62,6 @@ public:
 		m_Moveable = _Set;
 	}
 
-public:
-	void ShowSwordStorage(bool _Set);
-	void SetSwordStorage(bool _Set);
-
-	bool GetSwordStorage()
-	{
-		return m_SwordStorage;
-	}
-
 private:
 	void PlayMontage(EPLAYER_STATE _State);
 
@@ -86,7 +75,7 @@ public:
 public:
 	void ChangeState(EPLAYER_STATE _NextState, bool _Ignore = false);
 	void AttackMoveSpeedSetting(EPLAYER_STATE _State);
-	void PlayerRotation();
+	void CheckRunAnimation();
 
 private:
 	void AttackMove();

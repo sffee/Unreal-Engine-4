@@ -5,11 +5,12 @@
 AMyPlayer::AMyPlayer()
 	: m_State(EPLAYER_STATE::SWORD_IDLE_L)
 	, m_Moveable(true)
+	, m_Attacking(false)
 	, m_AttackMove(false)
 	, m_AttackCancleable(true)
-	, m_SwordStorage(false)
-	, m_DirAngle(0.f)
 	, m_ComboBCount(0)
+	, m_PressMoveSide(false)
+	, m_PressMoveFront(false)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -43,8 +44,6 @@ void AMyPlayer::BeginPlay()
 	Super::BeginPlay();
 
 	m_AnimInst = Cast<UPlayerAnimInstance>(GetMesh()->GetAnimInstance());
-	m_SwordMesh = Cast<USkeletalMeshComponent>(GetDefaultSubobjectByName("Sword"));
-	m_StorageSwordMesh = Cast<USkeletalMeshComponent>(GetDefaultSubobjectByName("StorageSword"));
 	
 	FString Str;
 	TArray<FPlayerMontageInfo*> AllRows;
@@ -56,14 +55,18 @@ void AMyPlayer::BeginPlay()
 		m_MontageMap.Add(AllRows[i]->State, AllRowNames[i]);
 
 	PlayMontage(EPLAYER_STATE::SWORD_IDLE_L);
+
+	APlayerCameraManager* CameraManager = Cast<APlayerController>(Controller)->PlayerCameraManager;
+	CameraManager->ViewPitchMax = 10.f;
+	CameraManager->ViewPitchMin = -30.f;
 }
 
 void AMyPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	CheckRunAnimation();
 	AttackMove();
-	PlayerRotation();
 }
 
 void AMyPlayer::PlayMontage(EPLAYER_STATE _State)
@@ -83,9 +86,27 @@ void AMyPlayer::AttackMove()
 	AddMovementInput(GetActorForwardVector(), 1.f);
 }
 
-void AMyPlayer::PlayerRotation()
+void AMyPlayer::CheckRunAnimation()
 {
+	if (m_Attacking && (m_PressMoveSide || m_PressMoveFront) && m_Moveable == true)
+	{
+		ChangeState(EPLAYER_STATE::SWORD_RUN);
+		return;
+	}
 
+	if ((m_State == EPLAYER_STATE::SWORD_IDLE_L || m_State == EPLAYER_STATE::SWORD_IDLE_R || m_State == EPLAYER_STATE::SWORD_RUN_END)
+		&& (m_PressMoveSide || m_PressMoveFront) != 0.f)
+	{
+		ChangeState(EPLAYER_STATE::SWORD_RUN);
+		return;
+	}
+
+	if (m_State == EPLAYER_STATE::SWORD_RUN
+		&& (!m_PressMoveSide && !m_PressMoveFront))
+	{
+		ChangeState(EPLAYER_STATE::SWORD_RUN_END);
+		return;
+	}
 }
 
 void AMyPlayer::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -112,8 +133,13 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 
 	if (EPLAYER_STATE::SWORD_COMBO_A_1 <= m_State && m_State <= EPLAYER_STATE::SWORD_COMBO_B_5)
 	{
+		m_Attacking = true;
 		m_Moveable = false;
 		m_AttackCancleable = false;
+	}
+	else
+	{
+		m_Attacking = false;
 	}
 
 	PlayMontage(m_State);
@@ -174,88 +200,52 @@ void AMyPlayer::AttackMoveSpeedSetting(EPLAYER_STATE _State)
 	}
 }
 
-void AMyPlayer::ShowSwordStorage(bool _Set)
-{
-	if (m_SwordMesh == nullptr) /// 시작하자마자 무기 꺼내진 상태로 테스트용으로 둔거라 임시로 달아둔거임 지워야함
-		return;
-
-	if (_Set)
-	{
-		m_SwordMesh->SetVisibility(false);
-		m_StorageSwordMesh->SetVisibility(true);
-	}
-	else
-	{
-		m_SwordMesh->SetVisibility(true);
-		m_StorageSwordMesh->SetVisibility(false);
-	}
-}
-
-void AMyPlayer::SetSwordStorage(bool _Set)
-{
-	m_SwordStorage = _Set;
-}
-
 void AMyPlayer::MoveFront(float _Scale)
 {
-	if (EPLAYER_STATE::SWORD_COMBO_A_1 <= m_State && m_State <= EPLAYER_STATE::SWORD_COMBO_A_5)
-	{
-		if (_Scale != 0.f && m_Moveable == true)
-			ChangeState(EPLAYER_STATE::SWORD_RUN);
-	}
-
-	if ((m_State == EPLAYER_STATE::SWORD_IDLE_L || m_State == EPLAYER_STATE::SWORD_IDLE_R || m_State == EPLAYER_STATE::SWORD_RUN_END)
-		&& _Scale != 0.f)
-		ChangeState(EPLAYER_STATE::SWORD_RUN);
-	else if (m_State == EPLAYER_STATE::SWORD_RUN && _Scale == 0.f)
-		ChangeState(EPLAYER_STATE::SWORD_RUN_END);
-
-	if ((m_State == EPLAYER_STATE::SWORD_IDLE_L || m_State == EPLAYER_STATE::SWORD_IDLE_R)
-		&& _Scale != 0.f)
-		ChangeState(EPLAYER_STATE::SWORD_RUN);
+	if (_Scale != 0.f)
+		m_PressMoveFront = true;
+	else
+		m_PressMoveFront = false;
 
 	if (m_Moveable == false)
 		return;
 
-	AddMovementInput(m_Arm->GetForwardVector(), _Scale);
+	FRotator Rotation = Controller->GetControlRotation();
+	const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+	const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+	AddMovementInput(Direction, _Scale);
 }
 
 void AMyPlayer::MoveSide(float _Scale)
 {
+	if (_Scale != 0.f)
+		m_PressMoveSide = true;
+	else
+		m_PressMoveSide = false;
+
 	if (m_Moveable == false)
 		return;
 
-	AddMovementInput(m_Arm->GetRightVector(), _Scale);
+	const FRotator Rotation = Controller->GetControlRotation();
+	const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+	const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+	AddMovementInput(Direction, _Scale);
 }
 
 void AMyPlayer::RotationZ(float _Scale)
 {
-	float DeltaTime = GetWorld()->GetDeltaSeconds();
-
-	FRotator Rot = m_Arm->GetRelativeRotation();
-	Rot.Yaw += DeltaTime * _Scale * 220.f;
-
-	m_Arm->SetRelativeRotation(Rot);
+	AddControllerYawInput(_Scale);
 }
 
 void AMyPlayer::RotationY(float _Scale)
 {
-	float DeltaTime = GetWorld()->GetDeltaSeconds();
-
-	FRotator Rot = m_Arm->GetRelativeRotation();
-	Rot.Pitch += DeltaTime * _Scale * 180.f;
-
-	if (40.f < Rot.Pitch)
-		Rot.Pitch = 40.f;
-	else if (Rot.Pitch < -45.f)
-		Rot.Pitch = -45.f;
-
-	m_Arm->SetRelativeRotation(Rot);
+	AddControllerPitchInput(_Scale);
 }
 
 void AMyPlayer::JumpAction()
 { 
-	m_DirAngle = 90.f;
 }
 
 void AMyPlayer::AttackAction()
