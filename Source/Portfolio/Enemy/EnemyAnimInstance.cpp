@@ -31,3 +31,12 @@ void UEnemyAnimInstance::AnimNotify_Idle()
 		Enemy->ChangeState(EENEMY_STATE::IDLE);
 	}
 }
+
+void UEnemyAnimInstance::AnimNotify_FlyDownCheck()
+{
+	AEnemyBase* Enemy = Cast<AEnemyBase>(TryGetPawnOwner());
+	if (Enemy != nullptr)
+	{
+		Enemy->SetFlyDownCheck(true);
+	}
+}

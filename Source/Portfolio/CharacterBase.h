@@ -21,7 +21,7 @@ public:
 	ACharacterBase();
 
 public:
-	virtual void Damage(AActor* _Actor) {};
+	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo) {};
 
 public:
 	virtual void BeginPlay() override;

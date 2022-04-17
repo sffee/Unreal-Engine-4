@@ -1,6 +1,7 @@
 #include "EnemyBase.h"
 
 AEnemyBase::AEnemyBase()
+	: m_FlyDownCheck(false)
 {
 	ConstructorHelpers::FObjectFinder<USkeletalMesh> EnemyMesh(TEXT("SkeletalMesh'/Game/ParagonMurdock/Characters/Heroes/Murdock/Meshes/Murdock.Murdock'"));
 	if (EnemyMesh.Succeeded())
@@ -52,6 +53,11 @@ void AEnemyBase::ChangeState(EENEMY_STATE _NextState, bool _Ignore)
 	m_State = _NextState;
 
 	PlayMontage(m_State);
+
+	if (m_State == EENEMY_STATE::DAMAGE_KNOCKBACK_FLY)
+	{
+		m_FlyDownCheck = false;
+	}
 }
 
 void AEnemyBase::Tick(float DeltaTime)
@@ -59,7 +65,7 @@ void AEnemyBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AEnemyBase::Damage(AActor* _Actor)
+void AEnemyBase::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
 {
-	Super::Damage(_Actor);
+	Super::Damage(_Actor, _AttackInfo);
 }

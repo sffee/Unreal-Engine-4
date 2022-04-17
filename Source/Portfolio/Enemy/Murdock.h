@@ -12,8 +12,11 @@ class PORTFOLIO_API AMurdock : public AEnemyBase
 public:
 	AMurdock();
 
+private:
+	void KnockBackFlyLandCheck();
+
 public:
-	virtual void Damage(AActor* _Actor) override;
+	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo) override;
 
 public:
 	virtual void BeginPlay() override;

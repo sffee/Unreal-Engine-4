@@ -28,4 +28,7 @@ public:
 public:
 	UFUNCTION()
 	void AnimNotify_Idle();
+
+	UFUNCTION()
+	void AnimNotify_FlyDownCheck();
 };

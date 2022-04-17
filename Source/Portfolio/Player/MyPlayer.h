@@ -27,6 +27,7 @@ private:
 	TMap<EPLAYER_STATE, FName> m_MontageMap;
 
 	UDataTable* m_AttackMoveTable;
+	UDataTable* m_AttackInfoTable;
 
 	UPlayerAnimInstance* m_AnimInst;
 
@@ -38,6 +39,10 @@ private:
 	bool m_PressMoveSide;
 	bool m_PressMoveFront;
 	int m_ComboBCount;
+
+	bool m_IsSlowTime;
+	float m_CurSlowPower;
+	float m_CurSlowTime;
 
 public:
 	AMyPlayer();
@@ -72,6 +77,9 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+private:
+	void TableSetting();
+
 public:
 	void ChangeState(EPLAYER_STATE _NextState, bool _Ignore = false);
 	void AttackMoveSpeedSetting(EPLAYER_STATE _State);
@@ -79,6 +87,9 @@ public:
 
 public:
 	void Attack();
+	bool HitProcess(const FHitResult& _HitResult, const FAttackInfo* _AttackInfo);
+	void SlowTime(float _Power, float _Time);
+	void SlowTimeCheck();
 
 private:
 	void AttackMove();

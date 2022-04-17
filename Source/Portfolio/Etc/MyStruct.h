@@ -29,6 +29,45 @@ struct FPlayerMontageInfo : public FTableRowBase
 };
 
 USTRUCT(Atomic, BlueprintType)
+struct FAttackInfo : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	FAttackInfo()
+		: SlowPower(1.f)
+		, SlowTime(0.f)
+		, Radius(200.f)
+		, Angle(360.f)
+	{
+
+	}
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	float XPivot;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	float Radius;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	float Angle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	float KnockBackPowerXY;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	float KnockBackPowerZ;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UCameraShakeBase> CameraShake;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	float SlowPower;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	float SlowTime;
+};
+
+USTRUCT(Atomic, BlueprintType)
 struct FEnemyMontageInfo : public FTableRowBase
 {
 	GENERATED_BODY()

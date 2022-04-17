@@ -22,6 +22,15 @@ protected:
 
 	UEnemyAnimInstance* m_AnimInst;
 
+protected:
+	bool m_FlyDownCheck;
+
+public:
+	void SetFlyDownCheck(bool _Set)
+	{
+		m_FlyDownCheck = _Set;
+	}
+
 public:
 	AEnemyBase();
 
@@ -38,7 +47,7 @@ public:
 	void ChangeState(EENEMY_STATE _NextState, bool _Ignore = false);
 
 public:
-	virtual void Damage(AActor* _Actor) override;
+	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo) override;
 
 public:
 	virtual void BeginPlay() override;

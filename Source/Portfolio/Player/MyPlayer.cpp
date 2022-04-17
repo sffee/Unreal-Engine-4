@@ -12,6 +12,9 @@ AMyPlayer::AMyPlayer()
 	, m_ComboBCount(0)
 	, m_PressMoveSide(false)
 	, m_PressMoveFront(false)
+	, m_IsSlowTime(false)
+	, m_CurSlowPower(0.f)
+	, m_CurSlowTime(0.f)
 {
 	m_Cam = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	m_Arm = CreateDefaultSubobject<USpringArmComponent>(TEXT("Arm"));
@@ -36,6 +39,10 @@ AMyPlayer::AMyPlayer()
 	ConstructorHelpers::FObjectFinder<UDataTable> AttackMoveTable(TEXT("DataTable'/Game/BlueprintClass/Player/DataTable/PlayerAttackMoveTable.PlayerAttackMoveTable'"));
 	if (AttackMoveTable.Succeeded())
 		m_AttackMoveTable = AttackMoveTable.Object;
+
+	ConstructorHelpers::FObjectFinder<UDataTable> AttackInfoTable(TEXT("DataTable'/Game/BlueprintClass/Player/DataTable/PlayerAttackInfoTable.PlayerAttackInfoTable'"));
+	if (AttackInfoTable.Succeeded())
+		m_AttackInfoTable = AttackInfoTable.Object;
 }
 
 void AMyPlayer::BeginPlay()
@@ -43,15 +50,8 @@ void AMyPlayer::BeginPlay()
 	Super::BeginPlay();
 
 	m_AnimInst = Cast<UPlayerAnimInstance>(GetMesh()->GetAnimInstance());
-	
-	FString Str;
-	TArray<FPlayerMontageInfo*> AllRows;
-	m_MontageTable->GetAllRows<FPlayerMontageInfo>(Str, AllRows);
 
-	TArray<FName> AllRowNames = m_MontageTable->GetRowNames();;
-
-	for (int i = 0; i < AllRows.Num(); i++)
-		m_MontageMap.Add(AllRows[i]->State, AllRowNames[i]);
+	TableSetting();
 
 	PlayMontage(EPLAYER_STATE::SWORD_IDLE_L);
 
@@ -66,6 +66,19 @@ void AMyPlayer::Tick(float DeltaTime)
 
 	CheckRunAnimation();
 	AttackMove();
+	SlowTimeCheck();
+}
+
+void AMyPlayer::TableSetting()
+{
+	FString Str;
+	TArray<FPlayerMontageInfo*> AllRows;
+	m_MontageTable->GetAllRows<FPlayerMontageInfo>(Str, AllRows);
+
+	TArray<FName> AllRowNames = m_MontageTable->GetRowNames();;
+
+	for (int i = 0; i < AllRows.Num(); i++)
+		m_MontageMap.Add(AllRows[i]->State, AllRowNames[i]);
 }
 
 void AMyPlayer::PlayMontage(EPLAYER_STATE _State)
@@ -155,7 +168,7 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 		GetCharacterMovement()->bUseSeparateBrakingFriction = true;
 		break;
 	case EPLAYER_STATE::SWORD_RUN_END:
-		GetCharacterMovement()->Velocity /= 2.f;
+		GetCharacterMovement()->Velocity /= 1.3f;
 		break;
 	case EPLAYER_STATE::SWORD_COMBO_A_1:
 		break;
@@ -182,31 +195,97 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 
 void AMyPlayer::Attack()
 {
-	FVector vPos = GetActorLocation();
-	float fRadius = 200.f;
+	FName RowName = m_MontageMap.FindRef(m_State);
 
-	TArray<FHitResult> arrHit;
-	FCollisionQueryParams param(NAME_None, false, this);
-
-	GetWorld()->SweepMultiByChannel(arrHit, vPos, vPos, FQuat::Identity
-		, ECC_GameTraceChannel3
-		, FCollisionShape::MakeSphere(fRadius), param);
-
-	if (arrHit.Num())
+	FPlayerMontageInfo* MontageInfo = m_MontageTable->FindRow<FPlayerMontageInfo>(RowName, TEXT(""));
+	if (MontageInfo != nullptr)
 	{
-		for (size_t i = 0; i < arrHit.Num(); ++i)
+		FName Section = m_AnimInst->Montage_GetCurrentSection(MontageInfo->Montage);
+		FAttackInfo* AttackInfo = m_AttackInfoTable->FindRow<FAttackInfo>(Section, TEXT(""));
+		if (AttackInfo != nullptr)
 		{
-			FTransform trans(arrHit[i].ImpactNormal.Rotation(), arrHit[i].ImpactPoint);
-			//UEffectMgr::GetInst(GetWorld())->CreateEffect(EEFFECT_TYPE::ICE, trans, GetLevel());
-			AEnemyBase* Enemy = Cast<AEnemyBase>(arrHit[i].Actor);
-			Enemy->Damage(this);
+			FVector vPos = GetActorLocation() + FVector(AttackInfo->XPivot, 0.f, 0.f);
+
+			TArray<FHitResult> arrHit;
+			FCollisionQueryParams param(NAME_None, false, this);
+
+			GetWorld()->SweepMultiByChannel(arrHit, vPos, vPos, FQuat::Identity
+				, ECC_GameTraceChannel3
+				, FCollisionShape::MakeSphere(AttackInfo->Radius), param);
+
+			bool HitSuccess = false;
+
+			if (arrHit.Num())
+			{
+				for (size_t i = 0; i < arrHit.Num(); ++i)
+				{
+					HitSuccess = HitProcess(arrHit[i], AttackInfo);
+				}
+			}
+
+#ifdef ENABLE_DRAW_DEBUG
+			FColor color = HitSuccess ? FColor::Green : FColor::Red;
+			DrawDebugSphere(GetWorld(), vPos, AttackInfo->Radius, 20, color, false, 2.5f);
+#endif
+		}
+	}
+}
+
+bool AMyPlayer::HitProcess(const FHitResult& _HitResult, const FAttackInfo* _AttackInfo)
+{
+	bool Return = false;
+
+	FVector ForwardVec = GetActorForwardVector();
+	ForwardVec.Z = 0.f;
+	ForwardVec.Normalize();
+
+	FVector DirVec = _HitResult.Actor->GetActorLocation() - GetActorLocation();
+	DirVec.Z = 0.f;
+	DirVec.Normalize();
+
+	float Dot = FVector::DotProduct(ForwardVec, DirVec);
+	float Radian = FMath::Acos(Dot);
+	float Angle = FMath::Abs(FMath::RadiansToDegrees(Radian));
+
+	if (Angle <= _AttackInfo->Angle / 2)
+	{
+		FTransform trans(_HitResult.ImpactNormal.Rotation(), _HitResult.ImpactPoint);
+		//UEffectMgr::GetInst(GetWorld())->CreateEffect(EEFFECT_TYPE::ICE, trans, GetLevel());
+
+		AEnemyBase* Enemy = Cast<AEnemyBase>(_HitResult.Actor);
+		if (Enemy != nullptr)
+		{
+			GetWorld()->GetFirstPlayerController()->ClientStartCameraShake(_AttackInfo->CameraShake);
+			SlowTime(_AttackInfo->SlowPower, _AttackInfo->SlowTime);
+			Enemy->Damage(this, _AttackInfo);
+			Return = true;
 		}
 	}
 
-#ifdef ENABLE_DRAW_DEBUG
-	FColor color = arrHit.Num() ? FColor::Green : FColor::Red;
-	DrawDebugSphere(GetWorld(), vPos, fRadius, 20, color, false, 2.5f);
-#endif
+	return Return;
+}
+
+void AMyPlayer::SlowTime(float _Power, float _Time)
+{
+	check(_Power != 0.f);
+
+	m_IsSlowTime = true;
+	m_CurSlowTime = _Time;
+	m_CurSlowPower = _Power;
+	GetWorldSettings()->SetTimeDilation(_Power);
+}
+
+void AMyPlayer::SlowTimeCheck()
+{
+	if (m_IsSlowTime == false)
+		return;
+
+	m_CurSlowTime -= 1.f / m_CurSlowPower * GetWorld()->GetDeltaSeconds();
+	if (m_CurSlowTime <= 0.f)
+	{
+		m_IsSlowTime = false;
+		GetWorldSettings()->SetTimeDilation(1.f);
+	}
 }
 
 void AMyPlayer::AttackMoveSpeedSetting(EPLAYER_STATE _State)
