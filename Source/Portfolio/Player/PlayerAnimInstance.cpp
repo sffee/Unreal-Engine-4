@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "MyPlayer.h"
 #include "PlayerAnimInstance.h"
+#include "MyPlayer.h"
 
 UPlayerAnimInstance::UPlayerAnimInstance()
 	: m_State(EPLAYER_STATE::SWORD_IDLE_L)
@@ -79,5 +79,14 @@ void UPlayerAnimInstance::AnimNotify_Attackable()
 	if (Player != nullptr)
 	{
 		Player->SetAttackCancleable(true);
+	}
+}
+
+void UPlayerAnimInstance::AnimNotify_Attack()
+{
+	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
+	if (Player != nullptr)
+	{
+		Player->Attack();
 	}
 }

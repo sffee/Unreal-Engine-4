@@ -29,6 +29,18 @@ struct FPlayerMontageInfo : public FTableRowBase
 };
 
 USTRUCT(Atomic, BlueprintType)
+struct FEnemyMontageInfo : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	EENEMY_STATE State;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	UAnimMontage* Montage;
+};
+
+USTRUCT(Atomic, BlueprintType)
 struct FAttackMoveInfo : public FTableRowBase
 {
 	GENERATED_BODY()

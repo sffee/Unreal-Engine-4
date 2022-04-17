@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "MyGameInstance.h"
 #include "PortfolioGameModeBase.h"
+#include "MyGameInstance.h"
 
 APortfolioGameModeBase::APortfolioGameModeBase()
 {

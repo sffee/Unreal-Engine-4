@@ -45,4 +45,7 @@ private:
 
 	UFUNCTION()
 	void AnimNotify_Attackable();
+
+	UFUNCTION()
+	void AnimNotify_Attack();
 };

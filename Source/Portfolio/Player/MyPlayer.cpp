@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MyPlayer.h"
+#include "../EnemyBase.h"
 
 AMyPlayer::AMyPlayer()
 	: m_State(EPLAYER_STATE::SWORD_IDLE_L)
@@ -12,8 +13,6 @@ AMyPlayer::AMyPlayer()
 	, m_PressMoveSide(false)
 	, m_PressMoveFront(false)
 {
-	PrimaryActorTick.bCanEverTick = true;
-
 	m_Cam = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	m_Arm = CreateDefaultSubobject<USpringArmComponent>(TEXT("Arm"));
 
@@ -156,6 +155,7 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 		GetCharacterMovement()->bUseSeparateBrakingFriction = true;
 		break;
 	case EPLAYER_STATE::SWORD_RUN_END:
+		GetCharacterMovement()->Velocity /= 2.f;
 		break;
 	case EPLAYER_STATE::SWORD_COMBO_A_1:
 		break;
@@ -178,6 +178,35 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 	default:
 		break;
 	}
+}
+
+void AMyPlayer::Attack()
+{
+	FVector vPos = GetActorLocation();
+	float fRadius = 200.f;
+
+	TArray<FHitResult> arrHit;
+	FCollisionQueryParams param(NAME_None, false, this);
+
+	GetWorld()->SweepMultiByChannel(arrHit, vPos, vPos, FQuat::Identity
+		, ECC_GameTraceChannel3
+		, FCollisionShape::MakeSphere(fRadius), param);
+
+	if (arrHit.Num())
+	{
+		for (size_t i = 0; i < arrHit.Num(); ++i)
+		{
+			FTransform trans(arrHit[i].ImpactNormal.Rotation(), arrHit[i].ImpactPoint);
+			//UEffectMgr::GetInst(GetWorld())->CreateEffect(EEFFECT_TYPE::ICE, trans, GetLevel());
+			AEnemyBase* Enemy = Cast<AEnemyBase>(arrHit[i].Actor);
+			Enemy->Damage(this);
+		}
+	}
+
+#ifdef ENABLE_DRAW_DEBUG
+	FColor color = arrHit.Num() ? FColor::Green : FColor::Red;
+	DrawDebugSphere(GetWorld(), vPos, fRadius, 20, color, false, 2.5f);
+#endif
 }
 
 void AMyPlayer::AttackMoveSpeedSetting(EPLAYER_STATE _State)

@@ -77,6 +77,9 @@ public:
 	void AttackMoveSpeedSetting(EPLAYER_STATE _State);
 	void CheckRunAnimation();
 
+public:
+	void Attack();
+
 private:
 	void AttackMove();
 
