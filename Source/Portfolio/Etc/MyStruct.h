@@ -38,6 +38,7 @@ struct FAttackInfo : public FTableRowBase
 		, SlowTime(0.f)
 		, Radius(200.f)
 		, Angle(360.f)
+		, HitEffectScale(1.f)
 	{
 
 	}
@@ -65,6 +66,12 @@ struct FAttackInfo : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
 	float SlowTime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	UParticleSystem* HitEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	float HitEffectScale;
 };
 
 USTRUCT(Atomic, BlueprintType)

@@ -2,6 +2,7 @@
 
 #include "MyPlayer.h"
 #include "../EnemyBase.h"
+#include "../Manager/EffectManager.h"
 
 AMyPlayer::AMyPlayer()
 	: m_State(EPLAYER_STATE::SWORD_IDLE_L)
@@ -224,8 +225,8 @@ void AMyPlayer::Attack()
 			}
 
 #ifdef ENABLE_DRAW_DEBUG
-			FColor color = HitSuccess ? FColor::Green : FColor::Red;
-			DrawDebugSphere(GetWorld(), vPos, AttackInfo->Radius, 20, color, false, 2.5f);
+			//FColor color = HitSuccess ? FColor::Green : FColor::Red;
+			//DrawDebugSphere(GetWorld(), vPos, AttackInfo->Radius, 20, color, false, 2.5f);
 #endif
 		}
 	}
@@ -249,14 +250,20 @@ bool AMyPlayer::HitProcess(const FHitResult& _HitResult, const FAttackInfo* _Att
 
 	if (Angle <= _AttackInfo->Angle / 2)
 	{
-		FTransform trans(_HitResult.ImpactNormal.Rotation(), _HitResult.ImpactPoint);
-		//UEffectMgr::GetInst(GetWorld())->CreateEffect(EEFFECT_TYPE::ICE, trans, GetLevel());
-
 		AEnemyBase* Enemy = Cast<AEnemyBase>(_HitResult.Actor);
 		if (Enemy != nullptr)
 		{
+			float Radius = GetCapsuleComponent()->GetScaledCapsuleRadius() / 2.f;
+			float Height = GetCapsuleComponent()->GetScaledCapsuleHalfHeight() / 2.f;
+			float XRandom = FMath::RandRange(-Radius, Radius);
+			float ZRandom = FMath::RandRange(-Height, Height);
+			FTransform Trans(Enemy->GetMesh()->GetBoneLocation(TEXT("spine_01")) + FVector(XRandom, 0.f, ZRandom));
+
+			UEffectManager::GetInst(GetWorld())->CreateEffect(_AttackInfo->HitEffect, Trans, GetLevel(), _AttackInfo->HitEffectScale);
+
 			GetWorld()->GetFirstPlayerController()->ClientStartCameraShake(_AttackInfo->CameraShake);
 			SlowTime(_AttackInfo->SlowPower, _AttackInfo->SlowTime);
+
 			Enemy->Damage(this, _AttackInfo);
 			Return = true;
 		}

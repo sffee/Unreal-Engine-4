@@ -31,9 +31,15 @@ void AMurdock::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
 {
 	Super::Damage(_Actor, _AttackInfo);
 
-	FRotator Rotator = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), _Actor->GetActorLocation());;
+	//FRotator Rotator = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), _Actor->GetActorLocation());;
+	//Rotator.Roll = 0.f;
+	//Rotator.Pitch = 0.f;
+	//SetActorRotation(Rotator);
+
+	FRotator Rotator = _Actor->GetActorRotation();
 	Rotator.Roll = 0.f;
 	Rotator.Pitch = 0.f;
+	Rotator.Yaw += 180.f;
 	SetActorRotation(Rotator);
 
 	FVector HitVector = _Actor->GetActorForwardVector();
@@ -45,5 +51,5 @@ void AMurdock::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
 	if (0.f < _AttackInfo->KnockBackPowerZ)
 		ChangeState(EENEMY_STATE::DAMAGE_KNOCKBACK_FLY);
 	else
-		ChangeState(EENEMY_STATE::DAMAGE_KNOCKBACK_GROUND);
+		ChangeState(EENEMY_STATE::DAMAGE_KNOCKBACK_GROUND, true);
 }
