@@ -3,6 +3,8 @@
 #include "MyPlayer.h"
 #include "../EnemyBase.h"
 #include "../Manager/EffectManager.h"
+#include "../Component/LockOnArmComponent.h"
+#include "../Component/TargetComponent.h"
 
 AMyPlayer::AMyPlayer()
 	: m_State(EPLAYER_STATE::SWORD_IDLE_L)
@@ -16,14 +18,13 @@ AMyPlayer::AMyPlayer()
 	, m_IsSlowTime(false)
 	, m_CurSlowPower(0.f)
 	, m_CurSlowTime(0.f)
+	, m_PressLockOn(false)
 {
+	m_LockOnArm = CreateDefaultSubobject<ULockOnArmComponent>(TEXT("LockOnArm"));
 	m_Cam = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	m_Arm = CreateDefaultSubobject<USpringArmComponent>(TEXT("Arm"));
 
-	m_Arm->SetupAttachment(GetMesh());
-	m_Cam->SetupAttachment(m_Arm);
-
-	m_Arm->TargetArmLength = 600.f;
+	m_LockOnArm->SetupAttachment(GetMesh());
+	m_Cam->SetupAttachment(m_LockOnArm);
 
 	ConstructorHelpers::FObjectFinder<USkeletalMesh> PlayerMesh(TEXT("SkeletalMesh'/Game/Player/Character/Meshes/Player.Player'"));
 	if (PlayerMesh.Succeeded())
@@ -68,6 +69,7 @@ void AMyPlayer::Tick(float DeltaTime)
 	CheckRunAnimation();
 	AttackMove();
 	SlowTimeCheck();
+	LockOnCameraUpdate(DeltaTime);
 }
 
 void AMyPlayer::TableSetting()
@@ -97,6 +99,45 @@ void AMyPlayer::AttackMove()
 		return;
 
 	AddMovementInput(GetActorForwardVector(), 1.f);
+}
+
+void AMyPlayer::LockOnCameraUpdate(float _DeltaTime)
+{
+	if (m_LockOnArm->IsLockOn() == false)
+		return;
+
+	if (m_PressLockOn == true)
+	{
+		float ElapsedTime = GetWorld()->GetRealTimeSeconds() - m_PressLockOnTime;
+		if (m_LockOnArm->GetLockOffPressTime() <= ElapsedTime)
+		{
+			m_PressLockOn = false;
+			m_LockOnArm->LockOff();
+			return;
+		}
+	}
+
+	FVector TargetDir = m_LockOnArm->GetLockOnTarget()->GetComponentLocation() - m_LockOnArm->GetComponentLocation();
+	FRotator TargetRot = TargetDir.GetSafeNormal().Rotation();
+	TargetRot.Pitch = 340.f;
+	FRotator MyRot = GetControlRotation();
+	FRotator NewRot = FMath::RInterpTo(MyRot, TargetRot, _DeltaTime, 2.f);
+
+	GetController()->SetControlRotation(NewRot);
+}
+
+void AMyPlayer::LookToLockOnTarget()
+{
+	if (m_LockOnArm->IsLockOn() == false)
+		return;
+
+	FVector TargetDir = m_LockOnArm->GetLockOnTarget()->GetComponentLocation() - m_LockOnArm->GetComponentLocation();
+	FRotator TargetRot = TargetDir.GetSafeNormal().Rotation();
+	FRotator MyRot = GetControlRotation();
+	MyRot.Pitch = 0.f;
+	MyRot.Yaw = TargetRot.Yaw;
+
+	SetActorRotation(MyRot);
 }
 
 void AMyPlayer::CheckRunAnimation()
@@ -129,12 +170,15 @@ void AMyPlayer::SetupPlayerInputComponent(class UInputComponent* PlayerInputComp
 	PlayerInputComponent->BindAxis(TEXT("MoveSide"), this, &AMyPlayer::MoveSide);
 	PlayerInputComponent->BindAxis(TEXT("MoveFront"), this, &AMyPlayer::MoveFront);
 
-	PlayerInputComponent->BindAxis(TEXT("RotationZ"), this, &AMyPlayer::RotationZ);
-	PlayerInputComponent->BindAxis(TEXT("RotationY"), this, &AMyPlayer::RotationY);
+	PlayerInputComponent->BindAxis(TEXT("Turn"), this, &AMyPlayer::Turn);
+	PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &AMyPlayer::LookUp);
 
 	PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &AMyPlayer::JumpAction);
 	PlayerInputComponent->BindAction(TEXT("Attack"), EInputEvent::IE_Pressed, this, &AMyPlayer::AttackAction);
 	PlayerInputComponent->BindAction(TEXT("AttackR"), EInputEvent::IE_Pressed, this, &AMyPlayer::AttackRAction);
+
+	PlayerInputComponent->BindAction(TEXT("LockOn"), EInputEvent::IE_Pressed, this, &AMyPlayer::LockOnDownAction);
+	PlayerInputComponent->BindAction(TEXT("LockOn"), EInputEvent::IE_Released, this, &AMyPlayer::LockOnUpAction);
 }
 
 void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
@@ -159,10 +203,6 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 
 	switch (m_State)
 	{
-	case EPLAYER_STATE::SWORD_IDLE_L:
-		break;
-	case EPLAYER_STATE::SWORD_IDLE_R:
-		break;
 	case EPLAYER_STATE::SWORD_RUN:
 		GetCharacterMovement()->MaxWalkSpeed = 800.f;
 		GetCharacterMovement()->MaxAcceleration = 2048.f;
@@ -170,24 +210,6 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 		break;
 	case EPLAYER_STATE::SWORD_RUN_END:
 		GetCharacterMovement()->Velocity /= 1.3f;
-		break;
-	case EPLAYER_STATE::SWORD_COMBO_A_1:
-		break;
-	case EPLAYER_STATE::SWORD_COMBO_A_2:
-		break;
-	case EPLAYER_STATE::SWORD_COMBO_A_3:
-		break;
-	case EPLAYER_STATE::SWORD_COMBO_A_4:
-		break;
-	case EPLAYER_STATE::SWORD_COMBO_A_5:
-		break;
-	case EPLAYER_STATE::SWORD_JUMP:
-		break;
-	case EPLAYER_STATE::SWORD_DAMAGE:
-		break;
-	case EPLAYER_STATE::SWORD_FALL:
-		break;
-	case EPLAYER_STATE::SWORD_DEAD:
 		break;
 	default:
 		break;
@@ -349,14 +371,28 @@ void AMyPlayer::MoveSide(float _Scale)
 	AddMovementInput(Direction, _Scale);
 }
 
-void AMyPlayer::RotationZ(float _Scale)
+void AMyPlayer::Turn(float _Scale)
 {
-	AddControllerYawInput(_Scale);
+	if (m_LockOnArm->IsLockOn())
+	{
+		AddControllerYawInput(_Scale * m_LockOnArm->GetLockOnTurnRate() * GetWorld()->GetDeltaSeconds());
+	}
+	else
+	{
+		AddControllerYawInput(_Scale);
+	}
 }
 
-void AMyPlayer::RotationY(float _Scale)
+void AMyPlayer::LookUp(float _Scale)
 {
-	AddControllerPitchInput(_Scale);
+	if (m_LockOnArm->IsLockOn())
+	{
+		AddControllerPitchInput(_Scale * m_LockOnArm->GetLockOnLookUpRate() * GetWorld()->GetDeltaSeconds());
+	}
+	else
+	{
+		AddControllerPitchInput(_Scale);
+	}
 }
 
 void AMyPlayer::JumpAction()
@@ -370,6 +406,7 @@ void AMyPlayer::AttackAction()
 	{
 		if (m_AttackCancleable == true)
 		{
+			LookToLockOnTarget();
 			ChangeState((EPLAYER_STATE)((int)m_State + 1));
 		}
 	}
@@ -377,11 +414,13 @@ void AMyPlayer::AttackAction()
 	{
 		if (m_AttackCancleable == true)
 		{
+			LookToLockOnTarget();
 			ChangeState(EPLAYER_STATE::SWORD_COMBO_A_1);
 		}
 	}
 	else
 	{
+		LookToLockOnTarget();
 		ChangeState(EPLAYER_STATE::SWORD_COMBO_A_1);
 	}
 }
@@ -391,12 +430,16 @@ void AMyPlayer::AttackRAction()
 	if (m_State == EPLAYER_STATE::SWORD_COMBO_B_1)
 	{
 		if (m_AttackCancleable == true)
+		{
+			LookToLockOnTarget();
 			ChangeState(EPLAYER_STATE::SWORD_COMBO_B_2);
+		}
 	}
 	else if (m_State == EPLAYER_STATE::SWORD_COMBO_B_2)
 	{
 		if (m_AttackCancleable == true)
 		{
+			LookToLockOnTarget();
 			m_ComboBCount = 0;
 			ChangeState(EPLAYER_STATE::SWORD_COMBO_B_3);
 		}
@@ -407,6 +450,7 @@ void AMyPlayer::AttackRAction()
 		{
 			if (m_AttackCancleable == true)
 			{
+				LookToLockOnTarget();
 				EPLAYER_STATE State = (int)m_ComboBCount % 3 == 0 ? EPLAYER_STATE::SWORD_COMBO_B_4 : EPLAYER_STATE::SWORD_COMBO_B_3;
 				ChangeState(State, true);
 				m_ComboBCount++;
@@ -415,16 +459,42 @@ void AMyPlayer::AttackRAction()
 		else
 		{
 			if (m_AttackCancleable == true)
+			{
+				LookToLockOnTarget();
 				ChangeState(EPLAYER_STATE::SWORD_COMBO_B_5);
+			}
 		}
 	}
 	else if (m_State == EPLAYER_STATE::SWORD_COMBO_B_5)
 	{
 		if (m_AttackCancleable == true)
+		{
+			LookToLockOnTarget();
 			ChangeState(EPLAYER_STATE::SWORD_COMBO_B_1);
+		}
 	}
 	else
 	{
+		LookToLockOnTarget();
 		ChangeState(EPLAYER_STATE::SWORD_COMBO_B_1);
 	}
+}
+
+void AMyPlayer::LockOnDownAction()
+{
+	m_PressLockOn = true;
+	m_PressLockOnTime = GetWorld()->GetRealTimeSeconds();
+
+	FColor color = FColor::Red;
+	DrawDebugSphere(GetWorld(), GetActorLocation(), m_LockOnArm->GetFindDistance(), 20, color, false, 2.5f);
+}
+
+void AMyPlayer::LockOnUpAction()
+{
+	if (m_PressLockOn == false)
+		return;
+
+	m_PressLockOn = false;
+	
+	m_LockOnArm->LockOn();
 }

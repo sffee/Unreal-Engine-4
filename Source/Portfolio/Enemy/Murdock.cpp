@@ -3,7 +3,6 @@
 
 AMurdock::AMurdock()
 {
-	
 }
 
 void AMurdock::BeginPlay()
@@ -30,11 +29,6 @@ void AMurdock::KnockBackFlyLandCheck()
 void AMurdock::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
 {
 	Super::Damage(_Actor, _AttackInfo);
-
-	//FRotator Rotator = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), _Actor->GetActorLocation());;
-	//Rotator.Roll = 0.f;
-	//Rotator.Pitch = 0.f;
-	//SetActorRotation(Rotator);
 
 	FRotator Rotator = _Actor->GetActorRotation();
 	Rotator.Roll = 0.f;

@@ -1,4 +1,5 @@
 #include "EnemyBase.h"
+#include "Component/TargetComponent.h"
 
 AEnemyBase::AEnemyBase()
 	: m_FlyDownCheck(false)
@@ -16,6 +17,8 @@ AEnemyBase::AEnemyBase()
 		m_MontageTable = MontageTable.Object;
 
 	GetCapsuleComponent()->SetCollisionProfileName("Enemy");
+	UTargetComponent* TargetCom = CreateDefaultSubobject<UTargetComponent>(TEXT("Target"));
+	TargetCom->SetupAttachment(GetMesh(), TEXT("LockOn"));
 }
 
 void AEnemyBase::BeginPlay()

@@ -14,11 +14,11 @@ class PORTFOLIO_API AMyPlayer : public ACharacterBase
 	GENERATED_BODY()
 	
 private:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* m_Cam;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	USpringArmComponent* m_Arm;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class ULockOnArmComponent* m_LockOnArm;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = State, meta = (AllowPrivateAccess = "true"))
 	EPLAYER_STATE m_State;
@@ -43,6 +43,9 @@ private:
 	bool m_IsSlowTime;
 	float m_CurSlowPower;
 	float m_CurSlowTime;
+
+	bool m_PressLockOn;
+	float m_PressLockOnTime;
 
 public:
 	AMyPlayer();
@@ -93,15 +96,19 @@ public:
 
 private:
 	void AttackMove();
+	void LockOnCameraUpdate(float _DeltaTime);
+	void LookToLockOnTarget();
 
 private:
 	void MoveFront(float _Scale);
 	void MoveSide(float _Scale);
-	void RotationZ(float _Scale);
-	void RotationY(float _Scale);
+	void Turn(float _Scale);
+	void LookUp(float _Scale);
 
 private:
 	void JumpAction();
 	void AttackAction();
 	void AttackRAction();
+	void LockOnDownAction();
+	void LockOnUpAction();
 };
