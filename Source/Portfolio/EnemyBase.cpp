@@ -17,6 +17,8 @@ AEnemyBase::AEnemyBase()
 		m_MontageTable = MontageTable.Object;
 
 	GetCapsuleComponent()->SetCollisionProfileName("Enemy");
+	GetMesh()->SetCollisionProfileName("NoCollision");
+
 	UTargetComponent* TargetCom = CreateDefaultSubobject<UTargetComponent>(TEXT("Target"));
 	TargetCom->SetupAttachment(GetMesh(), TEXT("LockOn"));
 }

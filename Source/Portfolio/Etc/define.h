@@ -6,6 +6,12 @@ DECLARE_LOG_CATEGORY_EXTERN(Client, Log, All);
 					 *FString::Printf(TEXT("%s : { %d } : %s"), *FString(__FUNCTION__), __LINE__, String));
 
 UENUM(BlueprintType)
+enum class EWEAPON_TYPE : uint8
+{
+	SWORD
+};
+
+UENUM(BlueprintType)
 enum class EPLAYER_STATE : uint8
 {
 	SWORD_IDLE_L,

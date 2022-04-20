@@ -17,6 +17,36 @@ public:
 };
 
 USTRUCT(Atomic, BlueprintType)
+struct FPlayerInfo : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	EWEAPON_TYPE WeaponType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	float MaxHP;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	float CurHP;
+};
+
+USTRUCT(Atomic, BlueprintType)
+struct FEnemyInfo : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	float MaxHP;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	float CurHP;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	float DetectRange;
+};
+
+USTRUCT(Atomic, BlueprintType)
 struct FPlayerMontageInfo : public FTableRowBase
 {
 	GENERATED_BODY()
@@ -42,6 +72,9 @@ struct FAttackInfo : public FTableRowBase
 	{
 
 	}
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	float Damage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
 	float XPivot;

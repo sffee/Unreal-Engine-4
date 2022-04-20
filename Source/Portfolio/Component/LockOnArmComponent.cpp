@@ -27,6 +27,17 @@ void ULockOnArmComponent::TickComponent(float DeltaTime, enum ELevelTick TickTyp
 	if (m_Target == nullptr)
 		return;
 
+	if (IsValid(m_Target) == false)
+	{
+		UTargetComponent* NearTarget = GetNearTarget();
+		if (NearTarget == nullptr)
+			LockOff();
+		else
+			LockOn();
+
+		return;
+	}
+
 	DrawDebugSphere(GetWorld(), m_Target->GetComponentLocation(), 20.f, 16, FColor::Red);
 }
 

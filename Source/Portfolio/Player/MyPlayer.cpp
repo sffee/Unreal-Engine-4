@@ -121,7 +121,7 @@ void AMyPlayer::LockOnCameraUpdate(float _DeltaTime)
 	FRotator TargetRot = TargetDir.GetSafeNormal().Rotation();
 	TargetRot.Pitch = 340.f;
 	FRotator MyRot = GetControlRotation();
-	FRotator NewRot = FMath::RInterpTo(MyRot, TargetRot, _DeltaTime, 2.f);
+	FRotator NewRot = FMath::RInterpTo(MyRot, TargetRot, _DeltaTime, 5.f);
 
 	GetController()->SetControlRotation(NewRot);
 }
@@ -379,7 +379,7 @@ void AMyPlayer::Turn(float _Scale)
 	}
 	else
 	{
-		AddControllerYawInput(_Scale);
+		AddControllerYawInput(_Scale * 0.5f);
 	}
 }
 
@@ -391,7 +391,7 @@ void AMyPlayer::LookUp(float _Scale)
 	}
 	else
 	{
-		AddControllerPitchInput(_Scale);
+		AddControllerPitchInput(_Scale * 0.5f);
 	}
 }
 
@@ -486,7 +486,7 @@ void AMyPlayer::LockOnDownAction()
 	m_PressLockOnTime = GetWorld()->GetRealTimeSeconds();
 
 	FColor color = FColor::Red;
-	DrawDebugSphere(GetWorld(), GetActorLocation(), m_LockOnArm->GetFindDistance(), 20, color, false, 2.5f);
+	DrawDebugSphere(GetWorld(), GetActorLocation(), m_LockOnArm->GetFindDistance(), 20, color, false, 0.5f);
 }
 
 void AMyPlayer::LockOnUpAction()
