@@ -31,7 +31,7 @@ enum class EPLAYER_STATE : uint8
 	SWORD_JUMP,
 	SWORD_DAMAGE,
 	SWORD_FALL,
-	SWORD_DEAD
+	SWORD_DEATH
 };
 
 UENUM(BlueprintType)
@@ -55,5 +55,5 @@ enum class EENEMY_STATE : uint8
 	DAMAGE_KNOCKBACK_FLY,
 	DOWN,
 	FALL,
-	DEAD
+	DEATH
 };

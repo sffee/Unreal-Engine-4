@@ -22,14 +22,6 @@ public:
 		m_HPBar->SetPercent(_Ratio);
 	}
 
-	void SetVisible(bool _Set)
-	{
-		if (_Set == true)
-			this->Visibility = ESlateVisibility::Visible;
-		else
-			this->Visibility = ESlateVisibility::Hidden;
-	}
-
 public:
 	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry& Geometry, float DT) override;

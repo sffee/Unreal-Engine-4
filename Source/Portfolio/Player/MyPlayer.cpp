@@ -500,8 +500,8 @@ void AMyPlayer::LockOnDownAction()
 	m_PressLockOn = true;
 	m_PressLockOnTime = GetWorld()->GetRealTimeSeconds();
 
-	FColor color = FColor::Red;
-	DrawDebugSphere(GetWorld(), GetActorLocation(), m_LockOnArm->GetFindDistance(), 20, color, false, 0.5f);
+	//FColor color = FColor::Red;
+	//DrawDebugSphere(GetWorld(), GetActorLocation(), m_LockOnArm->GetFindDistance(), 20, color, false, 0.5f);
 }
 
 void AMyPlayer::LockOnUpAction()

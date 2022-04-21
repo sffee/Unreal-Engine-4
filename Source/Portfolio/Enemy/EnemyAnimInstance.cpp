@@ -40,3 +40,21 @@ void UEnemyAnimInstance::AnimNotify_FlyDownCheck()
 		Enemy->SetFlyDownCheck(true);
 	}
 }
+
+void UEnemyAnimInstance::AnimNotify_Destroy()
+{
+	AEnemyBase* Enemy = Cast<AEnemyBase>(TryGetPawnOwner());
+	if (Enemy != nullptr)
+	{
+		Enemy->Destroy();
+	}
+}
+
+void UEnemyAnimInstance::AnimNotify_Dissolve()
+{
+	AEnemyBase* Enemy = Cast<AEnemyBase>(TryGetPawnOwner());
+	if (Enemy != nullptr)
+	{
+		Enemy->Dissolve();
+	}
+}

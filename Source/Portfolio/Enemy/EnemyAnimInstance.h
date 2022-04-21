@@ -31,4 +31,10 @@ public:
 
 	UFUNCTION()
 	void AnimNotify_FlyDownCheck();
+
+	UFUNCTION()
+	void AnimNotify_Destroy();
+
+	UFUNCTION()
+	void AnimNotify_Dissolve();
 };

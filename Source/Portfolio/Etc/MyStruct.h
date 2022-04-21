@@ -61,10 +61,10 @@ struct FAttackInfo : public FTableRowBase
 	GENERATED_BODY()
 
 	FAttackInfo()
-		: SlowPower(1.f)
-		, SlowTime(0.f)
-		, Radius(200.f)
+		: Radius(200.f)
 		, Angle(360.f)
+		, SlowPower(1.f)
+		, SlowTime(0.f)
 		, HitEffectScale(1.f)
 	{
 

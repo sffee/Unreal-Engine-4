@@ -18,6 +18,7 @@ ULockOnArmComponent::ULockOnArmComponent()
 	CameraLagSpeed = 3.f;
 	CameraRotationLagSpeed = 2.f;
 	CameraLagMaxDistance = 100.f;
+	m_FindDistance = 2000.f;
 }
 
 void ULockOnArmComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -27,15 +28,13 @@ void ULockOnArmComponent::TickComponent(float DeltaTime, enum ELevelTick TickTyp
 	if (m_Target == nullptr)
 		return;
 
-	if (IsValid(m_Target) == false)
+	if (IsValid(m_Target) == false || m_Target->IsDeath())
 	{
 		UTargetComponent* NearTarget = GetNearTarget();
 		if (NearTarget == nullptr)
 			LockOff();
 		else
 			LockOn();
-
-		return;
 	}
 }
 

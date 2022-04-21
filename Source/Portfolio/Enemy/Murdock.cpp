@@ -41,7 +41,17 @@ void AMurdock::KnockBackFlyLandCheck()
 		return;
 
 	if (GetMovementComponent()->IsMovingOnGround())
+	{
+		if (m_Info.CurHP <= 0.f)
+		{
+			UEnemyHPBarWidget* HPBarWidget = Cast<UEnemyHPBarWidget>(m_WidgetComponent->GetWidget());
+			HPBarWidget->SetVisibility(ESlateVisibility::Hidden);
+			ChangeState(EENEMY_STATE::DEATH);
+			return;
+		}
+
 		ChangeState(EENEMY_STATE::DOWN);
+	}
 }
 
 void AMurdock::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
@@ -63,10 +73,25 @@ void AMurdock::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
 	HitVector.X *= _AttackInfo->KnockBackPowerXY;
 	HitVector.Y *= _AttackInfo->KnockBackPowerXY;
 	HitVector.Z = _AttackInfo->KnockBackPowerZ;
-	LaunchCharacter(HitVector, false, false);
 
 	if (0.f < _AttackInfo->KnockBackPowerZ)
+	{
+		if (m_Info.CurHP <= 0.f)
+			HPBarWidget->SetVisibility(ESlateVisibility::Hidden);
+
+		LaunchCharacter(HitVector, false, false);
 		ChangeState(EENEMY_STATE::DAMAGE_KNOCKBACK_FLY);
+	}
 	else
+	{
+		if (m_Info.CurHP <= 0.f)
+		{
+			HPBarWidget->SetVisibility(ESlateVisibility::Hidden);
+			ChangeState(EENEMY_STATE::DEATH);
+			return;
+		}
+
+		LaunchCharacter(HitVector, false, false);
 		ChangeState(EENEMY_STATE::DAMAGE_KNOCKBACK_GROUND, true);
+	}
 }

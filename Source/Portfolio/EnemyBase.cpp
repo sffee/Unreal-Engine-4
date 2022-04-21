@@ -4,12 +4,13 @@
 AEnemyBase::AEnemyBase()
 	: m_FlyDownCheck(false)
 	, m_HitEffect(false)
+	, m_Dissolve(false)
 {
 	GetCapsuleComponent()->SetCollisionProfileName("Enemy");
 	GetMesh()->SetCollisionProfileName("NoCollision");
 
-	UTargetComponent* TargetCom = CreateDefaultSubobject<UTargetComponent>(TEXT("Target"));
-	TargetCom->SetupAttachment(GetMesh(), TEXT("LockOn"));
+	m_TargetComponent = CreateDefaultSubobject<UTargetComponent>(TEXT("Target"));
+	m_TargetComponent->SetupAttachment(GetMesh(), TEXT("LockOn"));
 }
 
 void AEnemyBase::BeginPlay()
@@ -48,9 +49,15 @@ void AEnemyBase::ChangeState(EENEMY_STATE _NextState, bool _Ignore)
 
 	PlayMontage(m_State);
 
-	if (m_State == EENEMY_STATE::DAMAGE_KNOCKBACK_FLY)
+	switch (m_State)
 	{
+	case EENEMY_STATE::DAMAGE_KNOCKBACK_FLY:
 		m_FlyDownCheck = false;
+		break;
+	case EENEMY_STATE::DEATH:
+		m_TargetComponent->Death();
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		break;
 	}
 }
 
@@ -59,6 +66,7 @@ void AEnemyBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	HitEffectUpdate(DeltaTime);
+	DissolveUpdate(DeltaTime);
 }
 
 void AEnemyBase::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
@@ -69,6 +77,12 @@ void AEnemyBase::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
 	m_HitEffect = true;
 	m_HitEffectTimer = 0.1f;
 	m_HitEffectRatio = 1.f;
+}
+
+void AEnemyBase::Dissolve()
+{
+	m_Dissolve = true;
+	m_DissolveProgress = 0.5f;
 }
 
 void AEnemyBase::HitEffectUpdate(float _DeltaTime)
@@ -89,4 +103,17 @@ void AEnemyBase::HitEffectUpdate(float _DeltaTime)
 
 		GetMesh()->SetScalarParameterValueOnMaterials(TEXT("HitEffect_Ratio"), m_HitEffectRatio);
 	}
+}
+
+void AEnemyBase::DissolveUpdate(float _DeltaTime)
+{
+	if (m_Dissolve == false)
+		return;
+
+	m_DissolveProgress += _DeltaTime * 0.5f;
+
+	GetMesh()->SetScalarParameterValueOnMaterials(TEXT("Dissolve_Progress"), m_DissolveProgress);
+
+	if (1.f <= m_DissolveProgress)
+		Destroy();
 }

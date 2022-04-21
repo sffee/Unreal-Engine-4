@@ -15,6 +15,20 @@ class PORTFOLIO_API UTargetComponent : public USphereComponent
 private:
 	UWidgetComponent* m_LockOnWidgetComponent;
 
+private:
+	bool m_Death;
+
+public:
+	void Death()
+	{
+		m_Death = true;
+	}
+
+	bool IsDeath()
+	{
+		return m_Death;
+	}
+
 public:
 	void LockOn();
 	void LockOff();

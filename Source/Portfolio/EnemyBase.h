@@ -21,6 +21,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
 	FEnemyInfo m_Info;
 
+	class UTargetComponent* m_TargetComponent;
+
 	UDataTable* m_MontageTable;
 	TMap<EENEMY_STATE, FName> m_MontageMap;
 
@@ -29,6 +31,9 @@ protected:
 	bool m_HitEffect;
 	float m_HitEffectTimer;
 	float m_HitEffectRatio;
+
+	bool m_Dissolve;
+	float m_DissolveProgress;
 
 protected:
 	bool m_FlyDownCheck;
@@ -56,7 +61,11 @@ public:
 
 public:
 	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo) override;
+	void Dissolve();
+
+private:
 	void HitEffectUpdate(float _DeltaTime);
+	void DissolveUpdate(float _DeltaTime);
 
 public:
 	virtual void BeginPlay() override;
