@@ -26,6 +26,10 @@ protected:
 
 	UEnemyAnimInstance* m_AnimInst;
 
+	bool m_HitEffect;
+	float m_HitEffectTimer;
+	float m_HitEffectRatio;
+
 protected:
 	bool m_FlyDownCheck;
 
@@ -52,6 +56,7 @@ public:
 
 public:
 	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo) override;
+	void HitEffectUpdate(float _DeltaTime);
 
 public:
 	virtual void BeginPlay() override;

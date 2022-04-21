@@ -3,6 +3,7 @@
 
 AEnemyBase::AEnemyBase()
 	: m_FlyDownCheck(false)
+	, m_HitEffect(false)
 {
 	GetCapsuleComponent()->SetCollisionProfileName("Enemy");
 	GetMesh()->SetCollisionProfileName("NoCollision");
@@ -56,9 +57,36 @@ void AEnemyBase::ChangeState(EENEMY_STATE _NextState, bool _Ignore)
 void AEnemyBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	HitEffectUpdate(DeltaTime);
 }
 
 void AEnemyBase::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
 {
 	Super::Damage(_Actor, _AttackInfo);
+
+	GetMesh()->SetScalarParameterValueOnMaterials(TEXT("HitEffect_Ratio"), 1.f);
+	m_HitEffect = true;
+	m_HitEffectTimer = 0.1f;
+	m_HitEffectRatio = 1.f;
+}
+
+void AEnemyBase::HitEffectUpdate(float _DeltaTime)
+{
+	if (m_HitEffect == false)
+		return;
+
+	m_HitEffectTimer -= _DeltaTime;
+
+	if (m_HitEffectTimer <= 0.f)
+	{
+		m_HitEffectRatio -= _DeltaTime * 8.f;
+		if (m_HitEffectRatio <= 0.f)
+		{
+			m_HitEffect = false;
+			m_HitEffectRatio = 0.f;
+		}
+
+		GetMesh()->SetScalarParameterValueOnMaterials(TEXT("HitEffect_Ratio"), m_HitEffectRatio);
+	}
 }
