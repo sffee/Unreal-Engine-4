@@ -6,6 +6,8 @@
 #include "UI/Player/MainHUD.h"
 #include "UI/Player/PlayerHPBarWidget.h"
 
+#include "Manager/LevelStreamManager.h"
+
 APortfolioGameModeBase::APortfolioGameModeBase()
 {
 	UMyGameInstance* GI = Cast<UMyGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
@@ -27,6 +29,8 @@ void APortfolioGameModeBase::BeginPlay()
 
 	m_MainHUD = Cast<UMainHUD>(CreateWidget(GetWorld(), m_MainHUDClass));
 	m_MainHUD->AddToViewport();
+
+	ULevelStreamManager::GetInst(GetWorld())->LoadAssetAsync();
 }
 
 void APortfolioGameModeBase::UpdateHPBar(float _Ratio)

@@ -16,9 +16,6 @@ class PORTFOLIO_API ULockOnArmComponent : public USpringArmComponent
 	float m_FindDistance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lock On", meta = (AllowPrivateAccess = "true"))
-	float m_LockOffDistance;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lock On", meta = (AllowPrivateAccess = "true"))
 	float m_LockOnTurnRate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lock On", meta = (AllowPrivateAccess = "true"))

@@ -44,6 +44,8 @@ void ULockOnArmComponent::LockOn()
 
 	if (NearTarget != nullptr)
 	{
+		m_Target->LockOff();
+
 		m_Target = NearTarget;
 		m_Target->LockOn();
 	}

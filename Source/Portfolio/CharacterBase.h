@@ -4,6 +4,8 @@
 
 #include "Etc/global.h"
 
+#include "Manager/LevelStreamManager.h"
+
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "CharacterBase.generated.h"

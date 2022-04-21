@@ -295,7 +295,7 @@ bool AMyPlayer::HitProcess(const FHitResult& _HitResult, const FAttackInfo* _Att
 			float ZRandom = FMath::RandRange(-Height, Height);
 			FTransform Trans(Enemy->GetMesh()->GetBoneLocation(TEXT("spine_01")) + FVector(XRandom, 0.f, ZRandom));
 
-			UEffectManager::GetInst(GetWorld())->CreateEffect(_AttackInfo->HitEffect, Trans, GetLevel(), _AttackInfo->HitEffectScale);
+			UEffectManager::GetInst(GetWorld())->CreateEffect(ULevelStreamManager::GetInst(GetWorld())->FindAsset(FName(_AttackInfo->HitEffect->GetPathName())), Trans, GetLevel(), _AttackInfo->HitEffectScale);
 
 			GetWorld()->GetFirstPlayerController()->ClientStartCameraShake(_AttackInfo->CameraShake);
 			SlowTime(_AttackInfo->SlowPower, _AttackInfo->SlowTime);

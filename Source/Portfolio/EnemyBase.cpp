@@ -75,7 +75,7 @@ void AEnemyBase::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
 
 	GetMesh()->SetScalarParameterValueOnMaterials(TEXT("HitEffect_Ratio"), 1.f);
 	m_HitEffect = true;
-	m_HitEffectTimer = 0.1f;
+	m_HitEffectTimer = 0.2f;
 	m_HitEffectRatio = 1.f;
 }
 
@@ -94,14 +94,14 @@ void AEnemyBase::HitEffectUpdate(float _DeltaTime)
 
 	if (m_HitEffectTimer <= 0.f)
 	{
-		m_HitEffectRatio -= _DeltaTime * 8.f;
-		if (m_HitEffectRatio <= 0.f)
-		{
-			m_HitEffect = false;
-			m_HitEffectRatio = 0.f;
-		}
+		//m_HitEffectRatio -= _DeltaTime * 8.f;
+		//if (m_HitEffectRatio <= 0.f)
+		//{
+		//	m_HitEffect = false;
+		//	m_HitEffectRatio = 0.f;
+		//}
 
-		GetMesh()->SetScalarParameterValueOnMaterials(TEXT("HitEffect_Ratio"), m_HitEffectRatio);
+		GetMesh()->SetScalarParameterValueOnMaterials(TEXT("HitEffect_Ratio"), 0.f);
 	}
 }
 
