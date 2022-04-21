@@ -4,18 +4,6 @@
 AEnemyBase::AEnemyBase()
 	: m_FlyDownCheck(false)
 {
-	ConstructorHelpers::FObjectFinder<USkeletalMesh> EnemyMesh(TEXT("SkeletalMesh'/Game/ParagonMurdock/Characters/Heroes/Murdock/Meshes/Murdock.Murdock'"));
-	if (EnemyMesh.Succeeded())
-		GetMesh()->SetSkeletalMesh(EnemyMesh.Object);
-
-	ConstructorHelpers::FClassFinder<UAnimInstance> AnimBlueprint(TEXT("AnimBlueprint'/Game/BlueprintClass/Enemy/Murdock/ABP_Murdock.ABP_Murdock_C'"));
-	if (AnimBlueprint.Succeeded())
-		GetMesh()->SetAnimInstanceClass(AnimBlueprint.Class);
-
-	ConstructorHelpers::FObjectFinder<UDataTable> MontageTable(TEXT("DataTable'/Game/BlueprintClass/Enemy/Murdock/DataTable/MurdockMontageTable.MurdockMontageTable'"));
-	if (MontageTable.Succeeded())
-		m_MontageTable = MontageTable.Object;
-
 	GetCapsuleComponent()->SetCollisionProfileName("Enemy");
 	GetMesh()->SetCollisionProfileName("NoCollision");
 

@@ -23,6 +23,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = State, meta = (AllowPrivateAccess = "true"))
 	EPLAYER_STATE m_State;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	FPlayerInfo m_Info;
+
 	UDataTable* m_MontageTable;
 	TMap<EPLAYER_STATE, FName> m_MontageMap;
 
@@ -49,6 +52,11 @@ private:
 
 public:
 	AMyPlayer();
+
+	void SetPlayerInfo(const FPlayerInfo& _Info)
+	{
+		m_Info = _Info;
+	}
 
 	EPLAYER_STATE GetState()
 	{
@@ -95,8 +103,11 @@ public:
 	void SlowTimeCheck();
 
 private:
-	void AttackMove();
 	void LockOnCameraUpdate(float _DeltaTime);
+	void HUDUpdate();
+
+private:
+	void AttackMove();
 	void LookToLockOnTarget();
 
 private:

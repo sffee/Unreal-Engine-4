@@ -37,8 +37,6 @@ void ULockOnArmComponent::TickComponent(float DeltaTime, enum ELevelTick TickTyp
 
 		return;
 	}
-
-	DrawDebugSphere(GetWorld(), m_Target->GetComponentLocation(), 20.f, 16, FColor::Red);
 }
 
 void ULockOnArmComponent::LockOn()
@@ -46,11 +44,15 @@ void ULockOnArmComponent::LockOn()
 	UTargetComponent* NearTarget = GetNearTarget();
 
 	if (NearTarget != nullptr)
+	{
 		m_Target = NearTarget;
+		m_Target->LockOn();
+	}
 }
 
 void ULockOnArmComponent::LockOff()
 {
+	m_Target->LockOff();
 	m_Target = nullptr;
 }
 

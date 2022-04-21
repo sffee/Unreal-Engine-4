@@ -3,6 +3,7 @@
 #include "Enemy/EnemyAnimInstance.h"
 
 #include "Etc/define.h"
+#include "Etc/MyStruct.h"
 
 #include "CoreMinimal.h"
 #include "CharacterBase.h"
@@ -16,6 +17,9 @@ class PORTFOLIO_API AEnemyBase : public ACharacterBase
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = State, meta = (AllowPrivateAccess = "true"))
 	EENEMY_STATE m_State;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	FEnemyInfo m_Info;
 
 	UDataTable* m_MontageTable;
 	TMap<EENEMY_STATE, FName> m_MontageMap;

@@ -41,9 +41,6 @@ struct FEnemyInfo : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
 	float CurHP;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
-	float DetectRange;
 };
 
 USTRUCT(Atomic, BlueprintType)

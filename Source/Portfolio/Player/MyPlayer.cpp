@@ -5,6 +5,7 @@
 #include "../Manager/EffectManager.h"
 #include "../Component/LockOnArmComponent.h"
 #include "../Component/TargetComponent.h"
+#include "../PortfolioGameModeBase.h"
 
 AMyPlayer::AMyPlayer()
 	: m_State(EPLAYER_STATE::SWORD_IDLE_L)
@@ -25,6 +26,10 @@ AMyPlayer::AMyPlayer()
 
 	m_LockOnArm->SetupAttachment(GetMesh());
 	m_Cam->SetupAttachment(m_LockOnArm);
+
+	m_Info.WeaponType = EWEAPON_TYPE::SWORD;
+	m_Info.CurHP = 200.f;
+	m_Info.MaxHP = 200.f;
 
 	ConstructorHelpers::FObjectFinder<USkeletalMesh> PlayerMesh(TEXT("SkeletalMesh'/Game/Player/Character/Meshes/Player.Player'"));
 	if (PlayerMesh.Succeeded())
@@ -66,10 +71,44 @@ void AMyPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	HUDUpdate();
 	CheckRunAnimation();
 	AttackMove();
 	SlowTimeCheck();
 	LockOnCameraUpdate(DeltaTime);
+}
+
+void AMyPlayer::LockOnCameraUpdate(float _DeltaTime)
+{
+	if (m_LockOnArm->IsLockOn() == false)
+		return;
+
+	if (m_PressLockOn == true)
+	{
+		float ElapsedTime = GetWorld()->GetRealTimeSeconds() - m_PressLockOnTime;
+		if (m_LockOnArm->GetLockOffPressTime() <= ElapsedTime)
+		{
+			m_PressLockOn = false;
+			m_LockOnArm->LockOff();
+			return;
+		}
+	}
+
+	FVector TargetDir = m_LockOnArm->GetLockOnTarget()->GetComponentLocation() - m_LockOnArm->GetComponentLocation();
+	FRotator TargetRot = TargetDir.GetSafeNormal().Rotation();
+	TargetRot.Pitch = 340.f;
+	FRotator MyRot = GetControlRotation();
+	FRotator NewRot = FMath::RInterpTo(MyRot, TargetRot, _DeltaTime, 5.f);
+
+	GetController()->SetControlRotation(NewRot);
+}
+
+void AMyPlayer::HUDUpdate()
+{
+	APortfolioGameModeBase* GM = Cast<APortfolioGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+
+	float HPRatio = m_Info.CurHP / m_Info.MaxHP;
+	GM->UpdateHPBar(HPRatio);
 }
 
 void AMyPlayer::TableSetting()
@@ -99,31 +138,6 @@ void AMyPlayer::AttackMove()
 		return;
 
 	AddMovementInput(GetActorForwardVector(), 1.f);
-}
-
-void AMyPlayer::LockOnCameraUpdate(float _DeltaTime)
-{
-	if (m_LockOnArm->IsLockOn() == false)
-		return;
-
-	if (m_PressLockOn == true)
-	{
-		float ElapsedTime = GetWorld()->GetRealTimeSeconds() - m_PressLockOnTime;
-		if (m_LockOnArm->GetLockOffPressTime() <= ElapsedTime)
-		{
-			m_PressLockOn = false;
-			m_LockOnArm->LockOff();
-			return;
-		}
-	}
-
-	FVector TargetDir = m_LockOnArm->GetLockOnTarget()->GetComponentLocation() - m_LockOnArm->GetComponentLocation();
-	FRotator TargetRot = TargetDir.GetSafeNormal().Rotation();
-	TargetRot.Pitch = 340.f;
-	FRotator MyRot = GetControlRotation();
-	FRotator NewRot = FMath::RInterpTo(MyRot, TargetRot, _DeltaTime, 5.f);
-
-	GetController()->SetControlRotation(NewRot);
 }
 
 void AMyPlayer::LookToLockOnTarget()
@@ -396,7 +410,8 @@ void AMyPlayer::LookUp(float _Scale)
 }
 
 void AMyPlayer::JumpAction()
-{ 
+{
+	m_Info.CurHP -= 10.f;
 }
 
 void AMyPlayer::AttackAction()

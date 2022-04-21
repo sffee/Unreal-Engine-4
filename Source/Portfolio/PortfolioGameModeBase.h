@@ -4,6 +4,8 @@
 
 #include "Etc/global.h"
 
+#include <blueprint/UserWidget.h>
+
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "PortfolioGameModeBase.generated.h"
@@ -15,4 +17,14 @@ class PORTFOLIO_API APortfolioGameModeBase : public AGameModeBase
 	
 private:
 	APortfolioGameModeBase();
+
+private:
+	TSubclassOf<UUserWidget> m_MainHUDClass;
+	class UMainHUD* m_MainHUD;
+
+public:
+	void UpdateHPBar(float _Ratio);
+
+public:
+	virtual void BeginPlay() override;
 };

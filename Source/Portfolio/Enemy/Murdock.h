@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Components/WidgetComponent.h>
+
 #include "CoreMinimal.h"
 #include "../EnemyBase.h"
 #include "Murdock.generated.h"
@@ -9,6 +11,10 @@ class PORTFOLIO_API AMurdock : public AEnemyBase
 {
 	GENERATED_BODY()
 	
+private:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UWidgetComponent* m_WidgetComponent;
+
 public:
 	AMurdock();
 

@@ -90,3 +90,12 @@ void UPlayerAnimInstance::AnimNotify_Attack()
 		Player->Attack();
 	}
 }
+
+void UPlayerAnimInstance::AnimNotify_RunLoop()
+{
+	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
+	if (Player != nullptr)
+	{
+		Player->ChangeState(EPLAYER_STATE::SWORD_RUN, true);
+	}
+}
