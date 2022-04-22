@@ -4,6 +4,7 @@
 #include <Engine/DataTable.h>
 #include <DrawDebugHelpers.h>
 
+#include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
 #include "define.h"

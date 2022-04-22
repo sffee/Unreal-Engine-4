@@ -28,7 +28,17 @@ void UEnemyAnimInstance::AnimNotify_Idle()
 	AEnemyBase* Enemy = Cast<AEnemyBase>(TryGetPawnOwner());
 	if (Enemy != nullptr)
 	{
+		Enemy->SetAttack(false);
 		Enemy->ChangeState(EENEMY_STATE::IDLE);
+	}
+}
+
+void UEnemyAnimInstance::AnimNotify_Fire()
+{
+	AEnemyBase* Enemy = Cast<AEnemyBase>(TryGetPawnOwner());
+	if (Enemy != nullptr)
+	{
+		Enemy->Fire();
 	}
 }
 

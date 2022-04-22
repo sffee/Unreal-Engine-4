@@ -2,6 +2,9 @@
 
 #include "Enemy/EnemyAnimInstance.h"
 
+#include <BehaviorTree/BehaviorTree.h>
+#include <BehaviorTree/BlackboardData.h>
+
 #include "Etc/define.h"
 #include "Etc/MyStruct.h"
 
@@ -21,6 +24,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
 	FEnemyInfo m_Info;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	UBlackboardData* m_Blackboard;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	UBehaviorTree* m_BehaviorTree;
+
 	class UTargetComponent* m_TargetComponent;
 
 	UDataTable* m_MontageTable;
@@ -30,10 +39,12 @@ protected:
 
 	bool m_HitEffect;
 	float m_HitEffectTimer;
-	float m_HitEffectRatio;
 
 	bool m_Dissolve;
 	float m_DissolveProgress;
+
+	bool m_Attack;
+	bool m_Damage;
 
 protected:
 	bool m_FlyDownCheck;
@@ -42,6 +53,31 @@ public:
 	void SetFlyDownCheck(bool _Set)
 	{
 		m_FlyDownCheck = _Set;
+	}
+
+	UBlackboardData* GetBlackboard()
+	{
+		return m_Blackboard;
+	}
+
+	UBehaviorTree* GetBehaviorTree()
+	{
+		return m_BehaviorTree;
+	}
+
+	void SetAttack(bool _Set)
+	{
+		m_Attack = _Set;
+	}
+
+	bool IsAttack()
+	{
+		return m_Attack;
+	}
+
+	bool IsDamage()
+	{
+		return m_Damage;
 	}
 
 public:
@@ -62,6 +98,17 @@ public:
 public:
 	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo) override;
 	void Dissolve();
+
+public:
+	virtual bool Attack()
+	{
+		return false;
+	};
+
+	virtual void Fire() {};
+
+protected:
+	void LookToPlayer();
 
 private:
 	void HitEffectUpdate(float _DeltaTime);

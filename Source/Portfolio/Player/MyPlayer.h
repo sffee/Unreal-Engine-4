@@ -122,4 +122,8 @@ private:
 	void AttackRAction();
 	void LockOnDownAction();
 	void LockOnUpAction();
+
+private:
+	UFUNCTION()
+	void OnBeginOverlap(UPrimitiveComponent* _PrimitiveComponent, AActor* _OtherActor, UPrimitiveComponent* _OtherComp, int32 _OtherBodyIndex, bool _bFromSweep, const FHitResult& _SweepResult);
 };

@@ -1,32 +1,40 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "CharacterBase.h"
 
-// Sets default values
 ACharacterBase::ACharacterBase()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
 }
 
-// Called when the game starts or when spawned
 void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 	
 }
 
-// Called every frame
 void ACharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 }
 
-// Called to bind functionality to input
 void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+void ACharacterBase::SpawnProjectile(TSubclassOf<AProjectile> _Particle, const FVector& _Position, const FRotator& _Rotation, const FVector& _Velocity)
+{
+	FActorSpawnParameters SpawnParam = {};
+
+	SpawnParam.OverrideLevel = GetLevel();
+	SpawnParam.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	SpawnParam.bDeferConstruction = true;
+
+	AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(_Particle, _Position, _Rotation, SpawnParam);
+
+	Projectile->GetProjectileMovement()->Velocity = _Velocity;
+
+	Projectile->FinishSpawning(Projectile->GetTransform());
 }

@@ -1,10 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "Etc/global.h"
 
 #include "Manager/LevelStreamManager.h"
+#include "Projectile/Projectile.h"
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
@@ -17,13 +16,14 @@ class PORTFOLIO_API ACharacterBase : public ACharacter
 
 public:
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = State, meta = (AllowPrivateAccess = "true"))
-	EENEMY_STATE m_Stateasd;
+	EENEMY_STATE m_State;
 
 public:
 	ACharacterBase();
 
 public:
 	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo) {};
+	void SpawnProjectile(TSubclassOf<AProjectile> _Particle, const FVector& _Position, const FRotator& _Rotation, const FVector& _Velocity);
 
 public:
 	virtual void BeginPlay() override;

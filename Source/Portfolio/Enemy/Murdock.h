@@ -2,6 +2,8 @@
 
 #include <Components/WidgetComponent.h>
 
+#include "../Projectile/Projectile.h"
+
 #include "CoreMinimal.h"
 #include "../EnemyBase.h"
 #include "Murdock.generated.h"
@@ -15,6 +17,11 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	UWidgetComponent* m_WidgetComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	float m_AttackDistance;
+
+	TSubclassOf<AProjectile> m_AttackProjectile;
+
 public:
 	AMurdock();
 
@@ -23,6 +30,8 @@ private:
 
 public:
 	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo) override;
+	virtual bool Attack() override;
+	virtual void Fire() override;
 
 public:
 	virtual void BeginPlay() override;

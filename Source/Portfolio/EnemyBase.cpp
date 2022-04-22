@@ -1,11 +1,19 @@
 #include "EnemyBase.h"
+
+#include "Enemy/EnemyAIController.h"
 #include "Component/TargetComponent.h"
+#include "Player/MyPlayer.h"
 
 AEnemyBase::AEnemyBase()
 	: m_FlyDownCheck(false)
 	, m_HitEffect(false)
 	, m_Dissolve(false)
+	, m_Attack(false)
+	, m_Damage(false)
 {
+	AIControllerClass = AEnemyAIController::StaticClass();
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
 	GetCapsuleComponent()->SetCollisionProfileName("Enemy");
 	GetMesh()->SetCollisionProfileName("NoCollision");
 
@@ -51,8 +59,14 @@ void AEnemyBase::ChangeState(EENEMY_STATE _NextState, bool _Ignore)
 
 	switch (m_State)
 	{
+	case EENEMY_STATE::IDLE:
+		m_Damage = false;
+		m_Attack = false;
+		break;
 	case EENEMY_STATE::DAMAGE_KNOCKBACK_FLY:
 		m_FlyDownCheck = false;
+	case EENEMY_STATE::DAMAGE_KNOCKBACK_GROUND:
+		m_Damage = true;
 		break;
 	case EENEMY_STATE::DEATH:
 		m_TargetComponent->Death();
@@ -73,16 +87,28 @@ void AEnemyBase::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
 {
 	Super::Damage(_Actor, _AttackInfo);
 
-	GetMesh()->SetScalarParameterValueOnMaterials(TEXT("HitEffect_Ratio"), 1.f);
 	m_HitEffect = true;
 	m_HitEffectTimer = 0.2f;
-	m_HitEffectRatio = 1.f;
+	GetMesh()->SetScalarParameterValueOnMaterials(TEXT("HitEffect_Ratio"), 1.f);
 }
 
 void AEnemyBase::Dissolve()
 {
 	m_Dissolve = true;
 	m_DissolveProgress = 0.5f;
+}
+
+void AEnemyBase::LookToPlayer()
+{
+	AMyPlayer* Player = Cast<AMyPlayer>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetPawn());
+
+	FVector TargetDir = Player->GetActorLocation() - GetActorLocation();
+	FRotator TargetRot = TargetDir.GetSafeNormal().Rotation();
+	FRotator MyRot = GetControlRotation();
+	MyRot.Pitch = 0.f;
+	MyRot.Yaw = TargetRot.Yaw;
+
+	SetActorRotation(MyRot);
 }
 
 void AEnemyBase::HitEffectUpdate(float _DeltaTime)
@@ -93,16 +119,7 @@ void AEnemyBase::HitEffectUpdate(float _DeltaTime)
 	m_HitEffectTimer -= _DeltaTime;
 
 	if (m_HitEffectTimer <= 0.f)
-	{
-		//m_HitEffectRatio -= _DeltaTime * 8.f;
-		//if (m_HitEffectRatio <= 0.f)
-		//{
-		//	m_HitEffect = false;
-		//	m_HitEffectRatio = 0.f;
-		//}
-
 		GetMesh()->SetScalarParameterValueOnMaterials(TEXT("HitEffect_Ratio"), 0.f);
-	}
 }
 
 void AEnemyBase::DissolveUpdate(float _DeltaTime)

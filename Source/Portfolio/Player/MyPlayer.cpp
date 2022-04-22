@@ -65,6 +65,8 @@ void AMyPlayer::BeginPlay()
 	APlayerCameraManager* CameraManager = Cast<APlayerController>(Controller)->PlayerCameraManager;
 	CameraManager->ViewPitchMax = 10.f;
 	CameraManager->ViewPitchMin = -30.f;
+
+	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AMyPlayer::OnBeginOverlap);
 }
 
 void AMyPlayer::Tick(float DeltaTime)
@@ -295,7 +297,8 @@ bool AMyPlayer::HitProcess(const FHitResult& _HitResult, const FAttackInfo* _Att
 			float ZRandom = FMath::RandRange(-Height, Height);
 			FTransform Trans(Enemy->GetMesh()->GetBoneLocation(TEXT("spine_01")) + FVector(XRandom, 0.f, ZRandom));
 
-			UEffectManager::GetInst(GetWorld())->CreateEffect(ULevelStreamManager::GetInst(GetWorld())->FindAsset(FName(_AttackInfo->HitEffect->GetPathName())), Trans, GetLevel(), _AttackInfo->HitEffectScale);
+			UObject* Object = ULevelStreamManager::GetInst(GetWorld())->FindAsset(FName(_AttackInfo->HitEffect->GetPathName()));
+			UEffectManager::GetInst(GetWorld())->CreateEffect(Object, Trans, GetLevel(), _AttackInfo->HitEffectScale);
 
 			GetWorld()->GetFirstPlayerController()->ClientStartCameraShake(_AttackInfo->CameraShake);
 			SlowTime(_AttackInfo->SlowPower, _AttackInfo->SlowTime);
@@ -411,7 +414,6 @@ void AMyPlayer::LookUp(float _Scale)
 
 void AMyPlayer::JumpAction()
 {
-	m_Info.CurHP -= 10.f;
 }
 
 void AMyPlayer::AttackAction()
@@ -512,4 +514,14 @@ void AMyPlayer::LockOnUpAction()
 	m_PressLockOn = false;
 	
 	m_LockOnArm->LockOn();
+}
+
+void AMyPlayer::OnBeginOverlap(UPrimitiveComponent* _PrimitiveComponent, AActor* _OtherActor, UPrimitiveComponent* _OtherComp, int32 _OtherBodyIndex, bool _bFromSweep, const FHitResult& _SweepResult)
+{
+	if (_OtherComp->GetCollisionObjectType() == ECC_GameTraceChannel5)
+	{
+		AProjectile* Projectile = Cast<AProjectile>(_OtherActor);
+
+		m_Info.CurHP -= Projectile->GetDamage();
+	}
 }

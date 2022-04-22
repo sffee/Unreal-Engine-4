@@ -44,7 +44,8 @@ void ULockOnArmComponent::LockOn()
 
 	if (NearTarget != nullptr)
 	{
-		m_Target->LockOff();
+		if (IsValid(m_Target))
+			m_Target->LockOff();
 
 		m_Target = NearTarget;
 		m_Target->LockOn();
@@ -53,7 +54,9 @@ void ULockOnArmComponent::LockOn()
 
 void ULockOnArmComponent::LockOff()
 {
-	m_Target->LockOff();
+	if (IsValid(m_Target))
+		m_Target->LockOff();
+
 	m_Target = nullptr;
 }
 
@@ -71,7 +74,10 @@ TArray<UTargetComponent*> ULockOnArmComponent::SearchTarget()
 	{
 		for (size_t i = 0; i < arrHit.Num(); ++i)
 		{
-			Targets.Add(Cast<UTargetComponent>(arrHit[i].Component));
+			UTargetComponent* Target = Cast<UTargetComponent>(arrHit[i].Component);
+			
+			if (Target->IsDeath() == false)
+				Targets.Add(Target);
 		}
 	}
 
