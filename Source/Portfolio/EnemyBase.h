@@ -12,11 +12,16 @@
 #include "CharacterBase.h"
 #include "EnemyBase.generated.h"
 
+DECLARE_DELEGATE(FSpawnEnemyDieDelegate)
+
 UCLASS()
 class PORTFOLIO_API AEnemyBase : public ACharacterBase
 {
 	GENERATED_BODY()
 	
+public:
+	FSpawnEnemyDieDelegate Die_Delegate;
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = State, meta = (AllowPrivateAccess = "true"))
 	EENEMY_STATE m_State;

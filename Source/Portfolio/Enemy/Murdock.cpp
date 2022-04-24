@@ -114,7 +114,7 @@ void AMurdock::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
 
 bool AMurdock::Attack()
 {
-	if (IsDamage())
+	if (IsDamage() || m_State == EENEMY_STATE::DEATH)
 		return false;
 
 	AMyPlayer* Player = Cast<AMyPlayer>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetPawn());

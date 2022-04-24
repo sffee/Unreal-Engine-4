@@ -1,5 +1,7 @@
 #include "EnemyBase.h"
 
+#include "Trigger/EnemySpawnTrigger.h"
+
 #include "Enemy/EnemyAIController.h"
 #include "Component/TargetComponent.h"
 #include "Player/MyPlayer.h"
@@ -69,6 +71,9 @@ void AEnemyBase::ChangeState(EENEMY_STATE _NextState, bool _Ignore)
 		m_Damage = true;
 		break;
 	case EENEMY_STATE::DEATH:
+		if (Die_Delegate.IsBound())
+			Die_Delegate.Execute();
+
 		m_TargetComponent->Death();
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
