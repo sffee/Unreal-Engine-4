@@ -1,6 +1,7 @@
 #include "CharacterBase.h"
 
 ACharacterBase::ACharacterBase()
+	: m_HitEffect(false)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -16,6 +17,7 @@ void ACharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	HitEffectUpdate(DeltaTime);
 }
 
 void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -37,4 +39,35 @@ void ACharacterBase::SpawnProjectile(TSubclassOf<AProjectile> _Particle, const F
 	Projectile->GetProjectileMovement()->Velocity = _Velocity;
 
 	Projectile->FinishSpawning(Projectile->GetTransform());
+}
+
+void ACharacterBase::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
+{
+	HitEffect();
+}
+
+void ACharacterBase::HitEffect()
+{
+	m_HitEffect = true;
+	m_HitEffectTimer = 0.2f;
+	GetMesh()->SetScalarParameterValueOnMaterials(TEXT("HitEffect_Ratio"), 1.f);
+
+	for (int i = 0; i < m_EtcMesh.Num(); i++)
+		m_EtcMesh[i]->SetScalarParameterValueOnMaterials(TEXT("HitEffect_Ratio"), 1.f);
+}
+
+void ACharacterBase::HitEffectUpdate(float _DeltaTime)
+{
+	if (m_HitEffect == false)
+		return;
+
+	m_HitEffectTimer -= _DeltaTime;
+
+	if (m_HitEffectTimer <= 0.f)
+	{
+		GetMesh()->SetScalarParameterValueOnMaterials(TEXT("HitEffect_Ratio"), 0.f);
+
+		for (int i = 0; i < m_EtcMesh.Num(); i++)
+			m_EtcMesh[i]->SetScalarParameterValueOnMaterials(TEXT("HitEffect_Ratio"), 0.f);
+	}
 }

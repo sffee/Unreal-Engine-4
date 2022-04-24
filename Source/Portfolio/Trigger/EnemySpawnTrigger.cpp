@@ -4,8 +4,7 @@
 #include "../EnemyBase.h"
 
 AEnemySpawnTrigger::AEnemySpawnTrigger()
-	: m_SpawnCount(0)
-	, m_StartSpawn(false)
+	: m_StartSpawn(false)
 	, m_AliveEnemyCount(0)
 	, m_PhaseCount(0)
 	, m_EndPhase(false)
@@ -65,7 +64,9 @@ void AEnemySpawnTrigger::Spawn()
 
 	for (int i = 0; i < m_Phase[m_PhaseCount].SpawnEnemy.Num(); i++)
 	{
-		for (int j = 0; j < m_Phase[m_PhaseCount].SpawnEnemy[i].SpawnCount; j++)
+		FSpawnEnemy& SpawnEnemy = m_Phase[m_PhaseCount].SpawnEnemy[i];
+
+		for (int j = 0; j < SpawnEnemy.SpawnCount; j++)
 		{
 			if (SpawnPoint.Num() == 0)
 			{
@@ -76,11 +77,10 @@ void AEnemySpawnTrigger::Spawn()
 			int RandomPoint = SpawnPoint[FMath::RandRange(0, SpawnPoint.Num() - 1)];
 			SpawnPoint.RemoveAt(SpawnPoint.Find(RandomPoint));
 
-			AEnemyBase* SpawnEnemy = m_EnemySpawnners[RandomPoint]->SpawnStart(m_Phase[m_PhaseCount].SpawnEnemy[i].SpawnEnemyType, m_SpawnRange);
-			m_SpawnCount = (m_SpawnCount + 1) % 3;
+			AEnemyBase* Enemy = m_EnemySpawnners[RandomPoint]->SpawnStart(SpawnEnemy.SpawnEnemyType, m_SpawnRange);
 			m_AliveEnemyCount++;
 
-			SpawnEnemy->Die_Delegate.BindUObject(this, &AEnemySpawnTrigger::Delegate_EnemyDie);
+			Enemy->Die_Delegate.BindUObject(this, &AEnemySpawnTrigger::Delegate_EnemyDie);
 		}
 	}
 
@@ -91,3 +91,4 @@ void AEnemySpawnTrigger::Spawn()
 
 	m_StartSpawn = true;
 }
+

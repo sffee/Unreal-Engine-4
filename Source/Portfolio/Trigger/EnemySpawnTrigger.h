@@ -46,7 +46,6 @@ class PORTFOLIO_API AEnemySpawnTrigger : public ATriggerBox
 	AActor* m_EndDestroyActor;
 
 private:
-	int m_SpawnCount;
 	int m_PhaseCount;
 	bool m_EndPhase;
 

@@ -42,9 +42,6 @@ protected:
 
 	UEnemyAnimInstance* m_AnimInst;
 
-	bool m_HitEffect;
-	float m_HitEffectTimer;
-
 	bool m_Dissolve;
 	float m_DissolveProgress;
 
@@ -116,7 +113,6 @@ protected:
 	void LookToPlayer();
 
 private:
-	void HitEffectUpdate(float _DeltaTime);
 	void DissolveUpdate(float _DeltaTime);
 
 public:

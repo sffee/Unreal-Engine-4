@@ -8,7 +8,6 @@
 
 AEnemyBase::AEnemyBase()
 	: m_FlyDownCheck(false)
-	, m_HitEffect(false)
 	, m_Dissolve(false)
 	, m_Attack(false)
 	, m_Damage(false)
@@ -38,7 +37,8 @@ void AEnemyBase::BeginPlay()
 	for (int i = 0; i < AllRows.Num(); i++)
 		m_MontageMap.Add(AllRows[i]->State, AllRowNames[i]);
 
-	PlayMontage(EENEMY_STATE::IDLE);
+	PlayMontage(m_State);
+	LookToPlayer();
 }
 
 void AEnemyBase::PlayMontage(EENEMY_STATE _State)
@@ -62,6 +62,7 @@ void AEnemyBase::ChangeState(EENEMY_STATE _NextState, bool _Ignore)
 	switch (m_State)
 	{
 	case EENEMY_STATE::IDLE:
+	case EENEMY_STATE::RUN:
 		m_Damage = false;
 		m_Attack = false;
 		break;
@@ -84,17 +85,12 @@ void AEnemyBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	HitEffectUpdate(DeltaTime);
 	DissolveUpdate(DeltaTime);
 }
 
 void AEnemyBase::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
 {
 	Super::Damage(_Actor, _AttackInfo);
-
-	m_HitEffect = true;
-	m_HitEffectTimer = 0.2f;
-	GetMesh()->SetScalarParameterValueOnMaterials(TEXT("HitEffect_Ratio"), 1.f);
 }
 
 void AEnemyBase::Dissolve()
@@ -114,17 +110,6 @@ void AEnemyBase::LookToPlayer()
 	MyRot.Yaw = TargetRot.Yaw;
 
 	SetActorRotation(MyRot);
-}
-
-void AEnemyBase::HitEffectUpdate(float _DeltaTime)
-{
-	if (m_HitEffect == false)
-		return;
-
-	m_HitEffectTimer -= _DeltaTime;
-
-	if (m_HitEffectTimer <= 0.f)
-		GetMesh()->SetScalarParameterValueOnMaterials(TEXT("HitEffect_Ratio"), 0.f);
 }
 
 void AEnemyBase::DissolveUpdate(float _DeltaTime)

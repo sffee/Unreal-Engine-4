@@ -26,6 +26,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
 	FPlayerInfo m_Info;
 
+	USkeletalMeshComponent* m_WingMesh;
+	USkeletalMeshComponent* m_SwordMesh;
+
 	UDataTable* m_MontageTable;
 	TMap<EPLAYER_STATE, FName> m_MontageMap;
 
@@ -39,8 +42,10 @@ private:
 	bool m_AttackCancleable;
 	bool m_Moveable;
 	
-	bool m_PressMoveSide;
-	bool m_PressMoveFront;
+	bool m_PressWKey;
+	bool m_PressSKey;
+	bool m_PressAKey;
+	bool m_PressDKey;
 	int m_ComboBCount;
 
 	bool m_IsSlowTime;
@@ -76,6 +81,11 @@ public:
 	void SetMoveable(bool _Set)
 	{
 		m_Moveable = _Set;
+	}
+
+	void CollisionOn()
+	{
+		GetCapsuleComponent()->SetCollisionProfileName(TEXT("Player"));
 	}
 
 private:
@@ -120,6 +130,7 @@ private:
 	void JumpAction();
 	void AttackAction();
 	void AttackRAction();
+	void EvadeAction();
 	void LockOnDownAction();
 	void LockOnUpAction();
 

@@ -31,6 +31,10 @@ EBTNodeResult::Type UTask_Trace::ExecuteTask(UBehaviorTreeComponent& OwnerComp, 
 	if (Enemy->IsAttack())
 		return EBTNodeResult::Failed;
 
+	EENEMY_STATE State = Enemy->GetState();
+	if (State == EENEMY_STATE::SPAWN || State == EENEMY_STATE::DEATH)
+		return EBTNodeResult::Failed;
+
 	Enemy->ChangeState(EENEMY_STATE::RUN);
 
 	UAIBlueprintHelperLibrary::SimpleMoveToActor(Controller, Player);

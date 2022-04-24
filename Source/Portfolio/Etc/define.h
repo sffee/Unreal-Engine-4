@@ -31,12 +31,14 @@ enum class EPLAYER_STATE : uint8
 	SWORD_JUMP,
 	SWORD_DAMAGE,
 	SWORD_FALL,
-	SWORD_DEATH
+	SWORD_DEATH,
+	EVADE
 };
 
 UENUM(BlueprintType)
 enum class EENEMY_STATE : uint8
 {
+	SPAWN,
 	IDLE,
 	RUN,
 	ATTACK1,

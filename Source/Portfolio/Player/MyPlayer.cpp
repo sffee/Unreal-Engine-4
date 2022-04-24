@@ -14,8 +14,10 @@ AMyPlayer::AMyPlayer()
 	, m_AttackMove(false)
 	, m_AttackCancleable(true)
 	, m_ComboBCount(0)
-	, m_PressMoveSide(false)
-	, m_PressMoveFront(false)
+	, m_PressWKey(false)
+	, m_PressSKey(false)
+	, m_PressAKey(false)
+	, m_PressDKey(false)
 	, m_IsSlowTime(false)
 	, m_CurSlowPower(0.f)
 	, m_CurSlowTime(0.f)
@@ -67,6 +69,9 @@ void AMyPlayer::BeginPlay()
 	CameraManager->ViewPitchMin = -30.f;
 
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AMyPlayer::OnBeginOverlap);
+
+	m_EtcMesh.Add(Cast<USkeletalMeshComponent>(GetDefaultSubobjectByName(TEXT("Wing"))));
+	m_EtcMesh.Add(Cast<USkeletalMeshComponent>(GetDefaultSubobjectByName(TEXT("Sword"))));
 }
 
 void AMyPlayer::Tick(float DeltaTime)
@@ -119,7 +124,7 @@ void AMyPlayer::TableSetting()
 	TArray<FPlayerMontageInfo*> AllRows;
 	m_MontageTable->GetAllRows<FPlayerMontageInfo>(Str, AllRows);
 
-	TArray<FName> AllRowNames = m_MontageTable->GetRowNames();;
+	TArray<FName> AllRowNames = m_MontageTable->GetRowNames();
 
 	for (int i = 0; i < AllRows.Num(); i++)
 		m_MontageMap.Add(AllRows[i]->State, AllRowNames[i]);
@@ -158,21 +163,21 @@ void AMyPlayer::LookToLockOnTarget()
 
 void AMyPlayer::CheckRunAnimation()
 {
-	if (m_Attacking && (m_PressMoveSide || m_PressMoveFront) && m_Moveable == true)
+	if (m_Attacking && (m_PressWKey || m_PressSKey || m_PressAKey || m_PressDKey) && m_Moveable == true)
 	{
 		ChangeState(EPLAYER_STATE::SWORD_RUN);
 		return;
 	}
 
-	if ((m_State == EPLAYER_STATE::SWORD_IDLE_L || m_State == EPLAYER_STATE::SWORD_IDLE_R || m_State == EPLAYER_STATE::SWORD_RUN_END)
-		&& (m_PressMoveSide || m_PressMoveFront) != 0.f)
+	if ((m_State == EPLAYER_STATE::SWORD_IDLE_L || m_State == EPLAYER_STATE::SWORD_IDLE_R || m_State == EPLAYER_STATE::SWORD_RUN_END || m_State == EPLAYER_STATE::SWORD_DAMAGE || m_State == EPLAYER_STATE::EVADE)
+		&& (m_PressWKey || m_PressSKey || m_PressAKey || m_PressDKey) != 0.f && m_Moveable == true)
 	{
 		ChangeState(EPLAYER_STATE::SWORD_RUN);
 		return;
 	}
 
 	if (m_State == EPLAYER_STATE::SWORD_RUN
-		&& (!m_PressMoveSide && !m_PressMoveFront))
+		&& !m_PressWKey && !m_PressSKey && !m_PressAKey && !m_PressDKey)
 	{
 		ChangeState(EPLAYER_STATE::SWORD_RUN_END);
 		return;
@@ -192,6 +197,7 @@ void AMyPlayer::SetupPlayerInputComponent(class UInputComponent* PlayerInputComp
 	PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &AMyPlayer::JumpAction);
 	PlayerInputComponent->BindAction(TEXT("Attack"), EInputEvent::IE_Pressed, this, &AMyPlayer::AttackAction);
 	PlayerInputComponent->BindAction(TEXT("AttackR"), EInputEvent::IE_Pressed, this, &AMyPlayer::AttackRAction);
+	PlayerInputComponent->BindAction(TEXT("Evade"), EInputEvent::IE_Pressed, this, &AMyPlayer::EvadeAction);
 
 	PlayerInputComponent->BindAction(TEXT("LockOn"), EInputEvent::IE_Pressed, this, &AMyPlayer::LockOnDownAction);
 	PlayerInputComponent->BindAction(TEXT("LockOn"), EInputEvent::IE_Released, this, &AMyPlayer::LockOnUpAction);
@@ -200,9 +206,13 @@ void AMyPlayer::SetupPlayerInputComponent(class UInputComponent* PlayerInputComp
 void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 {
 	if (_Ignore == false && m_State == _NextState)
+	{
 		return;
+	}
 
 	m_State = _NextState;
+
+	m_Moveable = true;
 
 	if (EPLAYER_STATE::SWORD_COMBO_A_1 <= m_State && m_State <= EPLAYER_STATE::SWORD_COMBO_B_5)
 	{
@@ -213,7 +223,14 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 	else
 	{
 		m_Attacking = false;
+		m_AttackMove = false;
 	}
+
+	if (_NextState == EPLAYER_STATE::EVADE)
+		m_AttackCancleable = false;
+
+	if (m_State == EPLAYER_STATE::EVADE && m_State != _NextState)
+		GetCapsuleComponent()->SetCollisionProfileName(TEXT("Player"));
 
 	PlayMontage(m_State);
 
@@ -226,6 +243,15 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 		break;
 	case EPLAYER_STATE::SWORD_RUN_END:
 		GetCharacterMovement()->Velocity /= 1.3f;
+		break;
+	case EPLAYER_STATE::SWORD_DAMAGE:
+		GetCharacterMovement()->bUseSeparateBrakingFriction = true;
+		m_Moveable = false;
+		break;
+	case EPLAYER_STATE::EVADE:
+		GetCharacterMovement()->bUseSeparateBrakingFriction = true;
+		m_Moveable = false;
+		GetCapsuleComponent()->SetCollisionProfileName(TEXT("Player_Evade"));
 		break;
 	default:
 		break;
@@ -291,8 +317,8 @@ bool AMyPlayer::HitProcess(const FHitResult& _HitResult, const FAttackInfo* _Att
 		AEnemyBase* Enemy = Cast<AEnemyBase>(_HitResult.Actor);
 		if (Enemy != nullptr)
 		{
-			float Radius = GetCapsuleComponent()->GetScaledCapsuleRadius() / 2.f;
-			float Height = GetCapsuleComponent()->GetScaledCapsuleHalfHeight() / 2.f;
+			float Radius = Enemy->GetCapsuleComponent()->GetScaledCapsuleRadius() / 2.f;
+			float Height = Enemy->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() / 2.f;
 			float XRandom = FMath::RandRange(-Radius, Radius);
 			float ZRandom = FMath::RandRange(-Height, Height);
 			FTransform Trans(Enemy->GetMesh()->GetBoneLocation(TEXT("spine_01")) + FVector(XRandom, 0.f, ZRandom));
@@ -336,8 +362,6 @@ void AMyPlayer::SlowTimeCheck()
 
 void AMyPlayer::AttackMoveSpeedSetting(EPLAYER_STATE _State)
 {
-	GetCharacterMovement()->Velocity = FVector::ZeroVector;
-
 	FName RowName = m_MontageMap.FindRef(_State);
 
 	FPlayerMontageInfo* MontageInfo = m_MontageTable->FindRow<FPlayerMontageInfo>(RowName, TEXT(""));
@@ -347,6 +371,8 @@ void AMyPlayer::AttackMoveSpeedSetting(EPLAYER_STATE _State)
 		FAttackMoveInfo* AttackMoveInfo = m_AttackMoveTable->FindRow<FAttackMoveInfo>(Section, TEXT(""));
 		if (AttackMoveInfo != nullptr)
 		{
+			GetMovementComponent()->StopMovementImmediately();
+
 			GetCharacterMovement()->MaxWalkSpeed = AttackMoveInfo->MaxWalkSpeed;
 			GetCharacterMovement()->MaxAcceleration = AttackMoveInfo->MaxAcceleration;
 			GetCharacterMovement()->bUseSeparateBrakingFriction = AttackMoveInfo->UseSeparateBrakingFriction;
@@ -356,10 +382,15 @@ void AMyPlayer::AttackMoveSpeedSetting(EPLAYER_STATE _State)
 
 void AMyPlayer::MoveFront(float _Scale)
 {
-	if (_Scale != 0.f)
-		m_PressMoveFront = true;
+	if (_Scale == 1.f)
+		m_PressWKey = true;
+	else if (_Scale == -1.f)
+		m_PressSKey = true;
 	else
-		m_PressMoveFront = false;
+	{
+		m_PressWKey = false;
+		m_PressSKey = false;
+	}
 
 	if (m_Moveable == false)
 		return;
@@ -373,11 +404,16 @@ void AMyPlayer::MoveFront(float _Scale)
 
 void AMyPlayer::MoveSide(float _Scale)
 {
-	if (_Scale != 0.f)
-		m_PressMoveSide = true;
+	if (_Scale == 1.f)
+		m_PressDKey = true;
+	else if (_Scale == -1.f)
+		m_PressAKey = true;
 	else
-		m_PressMoveSide = false;
-
+	{
+		m_PressDKey = false;
+		m_PressAKey = false;
+	}
+	
 	if (m_Moveable == false)
 		return;
 
@@ -418,22 +454,14 @@ void AMyPlayer::JumpAction()
 
 void AMyPlayer::AttackAction()
 {
+	if (m_AttackCancleable == false)
+		return;
+	
 	if (EPLAYER_STATE::SWORD_COMBO_A_1 <= m_State
 		&& m_State < EPLAYER_STATE::SWORD_COMBO_A_5)
 	{
-		if (m_AttackCancleable == true)
-		{
-			LookToLockOnTarget();
-			ChangeState((EPLAYER_STATE)((int)m_State + 1));
-		}
-	}
-	else if (m_State == EPLAYER_STATE::SWORD_COMBO_A_5)
-	{
-		if (m_AttackCancleable == true)
-		{
-			LookToLockOnTarget();
-			ChangeState(EPLAYER_STATE::SWORD_COMBO_A_1);
-		}
+		LookToLockOnTarget();
+		ChangeState((EPLAYER_STATE)((int)m_State + 1));
 	}
 	else
 	{
@@ -444,50 +472,33 @@ void AMyPlayer::AttackAction()
 
 void AMyPlayer::AttackRAction()
 {
+	if (m_AttackCancleable == false)
+		return;
+
 	if (m_State == EPLAYER_STATE::SWORD_COMBO_B_1)
 	{
-		if (m_AttackCancleable == true)
-		{
-			LookToLockOnTarget();
-			ChangeState(EPLAYER_STATE::SWORD_COMBO_B_2);
-		}
+		LookToLockOnTarget();
+		ChangeState(EPLAYER_STATE::SWORD_COMBO_B_2);
 	}
 	else if (m_State == EPLAYER_STATE::SWORD_COMBO_B_2)
 	{
-		if (m_AttackCancleable == true)
-		{
-			LookToLockOnTarget();
-			m_ComboBCount = 0;
-			ChangeState(EPLAYER_STATE::SWORD_COMBO_B_3);
-		}
+		LookToLockOnTarget();
+		m_ComboBCount = 0;
+		ChangeState(EPLAYER_STATE::SWORD_COMBO_B_3);
 	}
 	else if (m_State == EPLAYER_STATE::SWORD_COMBO_B_3 || m_State == EPLAYER_STATE::SWORD_COMBO_B_4)
 	{
-		if (m_ComboBCount < 6)
+		if (m_ComboBCount < 4)
 		{
-			if (m_AttackCancleable == true)
-			{
-				LookToLockOnTarget();
-				EPLAYER_STATE State = (int)m_ComboBCount % 3 == 0 ? EPLAYER_STATE::SWORD_COMBO_B_4 : EPLAYER_STATE::SWORD_COMBO_B_3;
-				ChangeState(State, true);
-				m_ComboBCount++;
-			}
+			LookToLockOnTarget();
+			EPLAYER_STATE State = (int)m_ComboBCount % 3 == 0 ? EPLAYER_STATE::SWORD_COMBO_B_4 : EPLAYER_STATE::SWORD_COMBO_B_3;
+			ChangeState(State, true);
+			m_ComboBCount++;
 		}
 		else
 		{
-			if (m_AttackCancleable == true)
-			{
-				LookToLockOnTarget();
-				ChangeState(EPLAYER_STATE::SWORD_COMBO_B_5);
-			}
-		}
-	}
-	else if (m_State == EPLAYER_STATE::SWORD_COMBO_B_5)
-	{
-		if (m_AttackCancleable == true)
-		{
 			LookToLockOnTarget();
-			ChangeState(EPLAYER_STATE::SWORD_COMBO_B_1);
+			ChangeState(EPLAYER_STATE::SWORD_COMBO_B_5);
 		}
 	}
 	else
@@ -497,13 +508,58 @@ void AMyPlayer::AttackRAction()
 	}
 }
 
+void AMyPlayer::EvadeAction()
+{
+	if (m_State == EPLAYER_STATE::EVADE)
+		return;
+
+	FRotator Rot = GetControlRotation();
+	FVector Direction;
+
+	if (m_PressWKey)
+	{
+		if (m_PressAKey)
+			Rot += FRotator(0.f, -45.f, 0.f);
+		else if (m_PressDKey)
+			Rot += FRotator(0.f, 45.f, 0.f);
+	}
+	else if (m_PressSKey)
+	{
+		if (m_PressAKey)
+			Rot += FRotator(0.f, 225.f, 0.f);
+		else if (m_PressDKey)
+			Rot += FRotator(0.f, 135.f, 0.f);
+		else
+			Rot += FRotator(0.f, 180.f, 0.f);
+	}
+	else if (m_PressAKey)
+	{
+		Rot += FRotator(0.f, -90.f, 0.f);
+	}
+	else if (m_PressDKey)
+	{
+		Rot += FRotator(0.f, 90.f, 0.f);
+	}
+
+	Rot.Roll = 0.f;
+	Rot.Pitch = 0.f;
+	SetActorRotation(Rot);
+
+	GetMovementComponent()->StopMovementImmediately();
+
+	Direction = GetActorForwardVector();
+	FVector MoveVector = Direction.GetSafeNormal() * 1200.f;
+	MoveVector.Z = 0.f;
+
+	LaunchCharacter(MoveVector, false, false);
+
+	ChangeState(EPLAYER_STATE::EVADE);
+}
+
 void AMyPlayer::LockOnDownAction()
 {
 	m_PressLockOn = true;
 	m_PressLockOnTime = GetWorld()->GetRealTimeSeconds();
-
-	//FColor color = FColor::Red;
-	//DrawDebugSphere(GetWorld(), GetActorLocation(), m_LockOnArm->GetFindDistance(), 20, color, false, 0.5f);
 }
 
 void AMyPlayer::LockOnUpAction()
@@ -520,8 +576,25 @@ void AMyPlayer::OnBeginOverlap(UPrimitiveComponent* _PrimitiveComponent, AActor*
 {
 	if (_OtherComp->GetCollisionObjectType() == ECC_GameTraceChannel5)
 	{
-		AProjectile* Projectile = Cast<AProjectile>(_OtherActor);
+		HitEffect();
 
+		AProjectile* Projectile = Cast<AProjectile>(_OtherActor);
 		m_Info.CurHP -= Projectile->GetDamage();
+
+		FVector TargetDir = _OtherActor->GetActorLocation() - GetActorLocation();
+		FRotator TargetRot = TargetDir.GetSafeNormal().Rotation();
+		FRotator MyRot = GetControlRotation();
+		MyRot.Pitch = 0.f;
+		MyRot.Yaw = TargetRot.Yaw;
+
+		SetActorRotation(MyRot);
+
+		GetMovementComponent()->StopMovementImmediately();
+
+		FVector HitVector = GetActorForwardVector() * -500.f;
+		HitVector.Z = 0.f;
+		LaunchCharacter(HitVector, false, false);
+
+		ChangeState(EPLAYER_STATE::SWORD_DAMAGE, true);
 	}
 }

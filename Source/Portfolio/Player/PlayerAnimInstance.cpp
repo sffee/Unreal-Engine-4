@@ -82,6 +82,16 @@ void UPlayerAnimInstance::AnimNotify_Attackable()
 	}
 }
 
+UFUNCTION()
+void UPlayerAnimInstance::AnimNotify_CollisionOn()
+{
+	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
+	if (Player != nullptr)
+	{
+		Player->CollisionOn();
+	}
+}
+
 void UPlayerAnimInstance::AnimNotify_Attack()
 {
 	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());

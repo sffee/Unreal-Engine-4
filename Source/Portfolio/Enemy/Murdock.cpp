@@ -2,6 +2,7 @@
 
 #include "../Player/MyPlayer.h"
 #include "../UI/Enemy/EnemyHPBarWidget.h"
+#include "../Component/TargetComponent.h"
 
 #include "../Manager/LevelStreamManager.h"
 
@@ -72,6 +73,9 @@ void AMurdock::KnockBackFlyLandCheck()
 
 void AMurdock::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
 {
+	if (m_Info.CurHP <= 0.f)
+		return;
+
 	Super::Damage(_Actor, _AttackInfo);
 
 	m_Info.CurHP -= _AttackInfo->Damage;
@@ -93,7 +97,10 @@ void AMurdock::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
 	if (0.f < _AttackInfo->KnockBackPowerZ)
 	{
 		if (m_Info.CurHP <= 0.f)
+		{
 			HPBarWidget->SetVisibility(ESlateVisibility::Hidden);
+			m_TargetComponent->Death();
+		}
 
 		LaunchCharacter(HitVector, false, false);
 		ChangeState(EENEMY_STATE::DAMAGE_KNOCKBACK_FLY);

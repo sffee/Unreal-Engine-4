@@ -47,6 +47,9 @@ private:
 	void AnimNotify_Attackable();
 
 	UFUNCTION()
+	void AnimNotify_CollisionOn();
+
+	UFUNCTION()
 	void AnimNotify_Attack();
 
 	UFUNCTION()
