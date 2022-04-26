@@ -38,6 +38,9 @@ private:
 	void AnimNotify_Moveable();
 
 	UFUNCTION()
+	void AnimNotify_MoveDisable();
+
+	UFUNCTION()
 	void AnimNotify_MoveStart();
 
 	UFUNCTION()
@@ -54,4 +57,7 @@ private:
 
 	UFUNCTION()
 	void AnimNotify_RunLoop();
+
+	UFUNCTION()
+	void AnimNotify_JumpLoop();
 };

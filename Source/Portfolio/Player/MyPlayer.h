@@ -55,6 +55,9 @@ private:
 	bool m_PressLockOn;
 	float m_PressLockOnTime;
 
+	bool m_Jump;
+	bool m_JumpSecond;
+
 public:
 	AMyPlayer();
 
@@ -115,6 +118,7 @@ public:
 private:
 	void LockOnCameraUpdate(float _DeltaTime);
 	void HUDUpdate();
+	void JumpUpdate();
 
 private:
 	void AttackMove();
@@ -133,6 +137,9 @@ private:
 	void EvadeAction();
 	void LockOnDownAction();
 	void LockOnUpAction();
+
+private:
+	bool IsPressMoveKey();
 
 private:
 	UFUNCTION()

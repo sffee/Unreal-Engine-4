@@ -22,6 +22,8 @@ AMyPlayer::AMyPlayer()
 	, m_CurSlowPower(0.f)
 	, m_CurSlowTime(0.f)
 	, m_PressLockOn(false)
+	, m_Jump(true)
+	, m_JumpSecond(false)
 {
 	m_LockOnArm = CreateDefaultSubobject<ULockOnArmComponent>(TEXT("LockOnArm"));
 	m_Cam = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
@@ -72,6 +74,8 @@ void AMyPlayer::BeginPlay()
 
 	m_EtcMesh.Add(Cast<USkeletalMeshComponent>(GetDefaultSubobjectByName(TEXT("Wing"))));
 	m_EtcMesh.Add(Cast<USkeletalMeshComponent>(GetDefaultSubobjectByName(TEXT("Sword"))));
+
+	JumpMaxCount = 2;
 }
 
 void AMyPlayer::Tick(float DeltaTime)
@@ -79,6 +83,7 @@ void AMyPlayer::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	HUDUpdate();
+	JumpUpdate();
 	CheckRunAnimation();
 	AttackMove();
 	SlowTimeCheck();
@@ -118,6 +123,17 @@ void AMyPlayer::HUDUpdate()
 	GM->UpdateHPBar(HPRatio);
 }
 
+void AMyPlayer::JumpUpdate()
+{
+	if (m_Jump == true)
+	{
+		if (GetMovementComponent()->IsMovingOnGround())
+		{
+			ChangeState(EPLAYER_STATE::JUMP_LANDING);
+		}
+	}
+}
+
 void AMyPlayer::TableSetting()
 {
 	FString Str;
@@ -136,7 +152,10 @@ void AMyPlayer::PlayMontage(EPLAYER_STATE _State)
 
 	FPlayerMontageInfo* MontageInfo = m_MontageTable->FindRow<FPlayerMontageInfo>(RowName, TEXT(""));
 	if (MontageInfo != nullptr)
+	{
 		m_AnimInst->Montage_Play(MontageInfo->Montage);
+		GetCharacterMovement()->bUseSeparateBrakingFriction = MontageInfo->UseSeparateBrakingFriction;
+	}
 }
 
 void AMyPlayer::AttackMove()
@@ -163,21 +182,21 @@ void AMyPlayer::LookToLockOnTarget()
 
 void AMyPlayer::CheckRunAnimation()
 {
-	if (m_Attacking && (m_PressWKey || m_PressSKey || m_PressAKey || m_PressDKey) && m_Moveable == true)
+	if (m_Attacking && IsPressMoveKey() && m_Moveable == true)
 	{
 		ChangeState(EPLAYER_STATE::SWORD_RUN);
 		return;
 	}
 
-	if ((m_State == EPLAYER_STATE::SWORD_IDLE_L || m_State == EPLAYER_STATE::SWORD_IDLE_R || m_State == EPLAYER_STATE::SWORD_RUN_END || m_State == EPLAYER_STATE::SWORD_DAMAGE || m_State == EPLAYER_STATE::EVADE)
-		&& (m_PressWKey || m_PressSKey || m_PressAKey || m_PressDKey) != 0.f && m_Moveable == true)
+	if ((m_State == EPLAYER_STATE::SWORD_IDLE_L || m_State == EPLAYER_STATE::SWORD_IDLE_R || m_State == EPLAYER_STATE::SWORD_RUN_END || m_State == EPLAYER_STATE::DAMAGE || m_State == EPLAYER_STATE::EVADE || m_State == EPLAYER_STATE::JUMP_LANDING)
+		&& IsPressMoveKey() && m_Moveable == true)
 	{
 		ChangeState(EPLAYER_STATE::SWORD_RUN);
 		return;
 	}
 
 	if (m_State == EPLAYER_STATE::SWORD_RUN
-		&& !m_PressWKey && !m_PressSKey && !m_PressAKey && !m_PressDKey)
+		&& IsPressMoveKey() == false)
 	{
 		ChangeState(EPLAYER_STATE::SWORD_RUN_END);
 		return;
@@ -213,6 +232,8 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 	m_State = _NextState;
 
 	m_Moveable = true;
+	m_Jump = false;
+	m_JumpSecond = false;
 
 	if (EPLAYER_STATE::SWORD_COMBO_A_1 <= m_State && m_State <= EPLAYER_STATE::SWORD_COMBO_B_5)
 	{
@@ -224,6 +245,7 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 	{
 		m_Attacking = false;
 		m_AttackMove = false;
+		m_AttackCancleable = true;
 	}
 
 	if (_NextState == EPLAYER_STATE::EVADE)
@@ -239,19 +261,25 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 	case EPLAYER_STATE::SWORD_RUN:
 		GetCharacterMovement()->MaxWalkSpeed = 800.f;
 		GetCharacterMovement()->MaxAcceleration = 2048.f;
-		GetCharacterMovement()->bUseSeparateBrakingFriction = true;
 		break;
 	case EPLAYER_STATE::SWORD_RUN_END:
 		GetCharacterMovement()->Velocity /= 1.3f;
 		break;
-	case EPLAYER_STATE::SWORD_DAMAGE:
-		GetCharacterMovement()->bUseSeparateBrakingFriction = true;
+	case EPLAYER_STATE::DAMAGE:
 		m_Moveable = false;
 		break;
 	case EPLAYER_STATE::EVADE:
-		GetCharacterMovement()->bUseSeparateBrakingFriction = true;
+		GetCharacterMovement()->MaxWalkSpeed = 800.f;
+		GetCharacterMovement()->MaxAcceleration = 2048.f;
 		m_Moveable = false;
 		GetCapsuleComponent()->SetCollisionProfileName(TEXT("Player_Evade"));
+		break;
+	case EPLAYER_STATE::JUMP_SECOND:
+		m_JumpSecond = true;
+	case EPLAYER_STATE::JUMP:
+		m_Jump = true;
+	case EPLAYER_STATE::JUMP_LANDING:
+		m_Moveable = false;
 		break;
 	default:
 		break;
@@ -375,7 +403,6 @@ void AMyPlayer::AttackMoveSpeedSetting(EPLAYER_STATE _State)
 
 			GetCharacterMovement()->MaxWalkSpeed = AttackMoveInfo->MaxWalkSpeed;
 			GetCharacterMovement()->MaxAcceleration = AttackMoveInfo->MaxAcceleration;
-			GetCharacterMovement()->bUseSeparateBrakingFriction = AttackMoveInfo->UseSeparateBrakingFriction;
 		}
 	}
 }
@@ -450,6 +477,25 @@ void AMyPlayer::LookUp(float _Scale)
 
 void AMyPlayer::JumpAction()
 {
+	if (m_Jump == false)
+	{
+		Jump();
+
+		GetCharacterMovement()->JumpZVelocity = 1000.f;
+
+		if (IsPressMoveKey())
+			GetCharacterMovement()->Velocity = GetActorForwardVector() * GetCharacterMovement()->MaxWalkSpeed;
+
+		ChangeState(EPLAYER_STATE::JUMP);
+	}
+	else if (m_JumpSecond == false)
+	{
+		Jump();
+
+		GetCharacterMovement()->JumpZVelocity = 1300.f;
+
+		ChangeState(EPLAYER_STATE::JUMP_SECOND);
+	}
 }
 
 void AMyPlayer::AttackAction()
@@ -595,6 +641,11 @@ void AMyPlayer::OnBeginOverlap(UPrimitiveComponent* _PrimitiveComponent, AActor*
 		HitVector.Z = 0.f;
 		LaunchCharacter(HitVector, false, false);
 
-		ChangeState(EPLAYER_STATE::SWORD_DAMAGE, true);
+		ChangeState(EPLAYER_STATE::DAMAGE, true);
 	}
+}
+
+bool AMyPlayer::IsPressMoveKey()
+{
+	return m_PressWKey || m_PressSKey || m_PressAKey || m_PressDKey;
 }

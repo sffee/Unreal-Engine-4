@@ -54,6 +54,15 @@ void UPlayerAnimInstance::AnimNotify_Moveable()
 	}
 }
 
+void UPlayerAnimInstance::AnimNotify_MoveDisable()
+{
+	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
+	if (Player != nullptr)
+	{
+		Player->SetMoveable(false);
+	}
+}
+
 void UPlayerAnimInstance::AnimNotify_MoveStart()
 {
 	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
@@ -107,5 +116,14 @@ void UPlayerAnimInstance::AnimNotify_RunLoop()
 	if (Player != nullptr)
 	{
 		Player->ChangeState(EPLAYER_STATE::SWORD_RUN, true);
+	}
+}
+
+void UPlayerAnimInstance::AnimNotify_JumpLoop()
+{
+	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
+	if (Player != nullptr)
+	{
+		Player->ChangeState(EPLAYER_STATE::JUMP_LOOP);
 	}
 }

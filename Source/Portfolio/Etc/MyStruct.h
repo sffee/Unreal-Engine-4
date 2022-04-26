@@ -48,11 +48,19 @@ struct FPlayerMontageInfo : public FTableRowBase
 {
 	GENERATED_BODY()
 
+	FPlayerMontageInfo()
+		: UseSeparateBrakingFriction(false)
+	{
+	}
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
 	EPLAYER_STATE State;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* Montage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	bool UseSeparateBrakingFriction;
 };
 
 USTRUCT(Atomic, BlueprintType)
@@ -121,17 +129,9 @@ struct FAttackMoveInfo : public FTableRowBase
 {
 	GENERATED_BODY()
 
-	FAttackMoveInfo()
-		: UseSeparateBrakingFriction(false)
-	{
-	}
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	float MaxWalkSpeed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
-		float MaxWalkSpeed;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
-		float MaxAcceleration;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
-		bool UseSeparateBrakingFriction;
+	float MaxAcceleration;
 };
