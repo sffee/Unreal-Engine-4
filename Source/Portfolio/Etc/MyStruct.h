@@ -49,7 +49,8 @@ struct FPlayerMontageInfo : public FTableRowBase
 	GENERATED_BODY()
 
 	FPlayerMontageInfo()
-		: UseSeparateBrakingFriction(false)
+		: Gravity(2.f)
+		, UseSeparateBrakingFriction(false)
 	{
 	}
 
@@ -58,6 +59,9 @@ struct FPlayerMontageInfo : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* Montage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	float Gravity;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
 	bool UseSeparateBrakingFriction;

@@ -22,8 +22,9 @@ AMyPlayer::AMyPlayer()
 	, m_CurSlowPower(0.f)
 	, m_CurSlowTime(0.f)
 	, m_PressLockOn(false)
-	, m_Jump(true)
+	, m_Jump(false)
 	, m_JumpSecond(false)
+	, m_JumpAttack(false)
 {
 	m_LockOnArm = CreateDefaultSubobject<ULockOnArmComponent>(TEXT("LockOnArm"));
 	m_Cam = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
@@ -155,6 +156,7 @@ void AMyPlayer::PlayMontage(EPLAYER_STATE _State)
 	{
 		m_AnimInst->Montage_Play(MontageInfo->Montage);
 		GetCharacterMovement()->bUseSeparateBrakingFriction = MontageInfo->UseSeparateBrakingFriction;
+		GetCharacterMovement()->GravityScale = MontageInfo->Gravity;
 	}
 }
 
@@ -232,10 +234,8 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 	m_State = _NextState;
 
 	m_Moveable = true;
-	m_Jump = false;
-	m_JumpSecond = false;
 
-	if (EPLAYER_STATE::SWORD_COMBO_A_1 <= m_State && m_State <= EPLAYER_STATE::SWORD_COMBO_B_5)
+	if (EPLAYER_STATE::SWORD_COMBO_A_1 <= m_State && m_State <= EPLAYER_STATE::SWORD_JUMP_COMBO_B_1)
 	{
 		m_Attacking = true;
 		m_Moveable = false;
@@ -278,7 +278,13 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 		m_JumpSecond = true;
 	case EPLAYER_STATE::JUMP:
 		m_Jump = true;
+		GetCharacterMovement()->MaxWalkSpeed = 800.f;
+		m_Moveable = false;
+		break;
 	case EPLAYER_STATE::JUMP_LANDING:
+		m_Jump = false;
+		m_JumpSecond = false;
+		GetCharacterMovement()->MaxWalkSpeed = 800.f;
 		m_Moveable = false;
 		break;
 	default:
@@ -479,22 +485,25 @@ void AMyPlayer::JumpAction()
 {
 	if (m_Jump == false)
 	{
+		m_JumpAttack = false;
+
 		Jump();
 
 		GetCharacterMovement()->JumpZVelocity = 1000.f;
+		GetMovementComponent()->StopMovementImmediately();
+
+		ChangeState(EPLAYER_STATE::JUMP);
 
 		if (IsPressMoveKey())
 			GetCharacterMovement()->Velocity = GetActorForwardVector() * GetCharacterMovement()->MaxWalkSpeed;
-
-		ChangeState(EPLAYER_STATE::JUMP);
 	}
 	else if (m_JumpSecond == false)
 	{
 		Jump();
 
-		GetCharacterMovement()->JumpZVelocity = 1300.f;
-
 		ChangeState(EPLAYER_STATE::JUMP_SECOND);
+
+		GetCharacterMovement()->JumpZVelocity = 1300.f;
 	}
 }
 
@@ -502,8 +511,20 @@ void AMyPlayer::AttackAction()
 {
 	if (m_AttackCancleable == false)
 		return;
-	
-	if (EPLAYER_STATE::SWORD_COMBO_A_1 <= m_State
+
+	if ((m_State == EPLAYER_STATE::JUMP || m_State == EPLAYER_STATE::JUMP_LOOP || m_State == EPLAYER_STATE::JUMP_SECOND) && m_JumpAttack == false)
+	{
+		m_JumpAttack = true;
+		GetCharacterMovement()->Velocity = FVector::ZeroVector;
+		LookToLockOnTarget();
+		ChangeState(EPLAYER_STATE::SWORD_JUMP_COMBO_A_1);
+	}
+	else if (EPLAYER_STATE::SWORD_JUMP_COMBO_A_1 <= m_State && m_State <= EPLAYER_STATE::SWORD_JUMP_COMBO_A_2)
+	{
+		LookToLockOnTarget();
+		ChangeState((EPLAYER_STATE)((int)m_State + 1));
+	}
+	else if (EPLAYER_STATE::SWORD_COMBO_A_1 <= m_State
 		&& m_State < EPLAYER_STATE::SWORD_COMBO_A_5)
 	{
 		LookToLockOnTarget();

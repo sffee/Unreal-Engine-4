@@ -57,6 +57,7 @@ private:
 
 	bool m_Jump;
 	bool m_JumpSecond;
+	bool m_JumpAttack;
 
 public:
 	AMyPlayer();
