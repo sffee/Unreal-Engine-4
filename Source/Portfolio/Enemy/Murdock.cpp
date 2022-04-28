@@ -54,11 +54,13 @@ void AMurdock::Tick(float DeltaTime)
 
 void AMurdock::KnockBackFlyLandCheck()
 {
-	if (m_State != EENEMY_STATE::DAMAGE_KNOCKBACK_FLY || m_FlyDownCheck == false)
+	if ((m_State != EENEMY_STATE::DAMAGE_KNOCKBACK_FLY && m_State != EENEMY_STATE::DAMAGE_AIR) || m_FlyDownCheck == false)
 		return;
 
 	if (GetMovementComponent()->IsMovingOnGround())
 	{
+		m_Fly = false;
+
 		if (m_Info.CurHP <= 0.f)
 		{
 			UEnemyHPBarWidget* HPBarWidget = Cast<UEnemyHPBarWidget>(m_WidgetComponent->GetWidget());
@@ -73,7 +75,7 @@ void AMurdock::KnockBackFlyLandCheck()
 
 void AMurdock::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
 {
-	if (m_Info.CurHP <= 0.f)
+	if (m_Fly == false && m_Info.CurHP <= 0.f)
 		return;
 
 	Super::Damage(_Actor, _AttackInfo);
@@ -94,14 +96,36 @@ void AMurdock::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
 	HitVector.Y *= _AttackInfo->KnockBackPowerXY;
 	HitVector.Z = _AttackInfo->KnockBackPowerZ;
 
-	if (0.f < _AttackInfo->KnockBackPowerZ)
+	if (m_Fly == true)
+	{
+		if (HitVector.Z == 0.f)
+		{
+			GetCharacterMovement()->Velocity = FVector::ZeroVector;
+			GetCharacterMovement()->GravityScale = 0.f;
+		}
+		else
+		{
+			GetCharacterMovement()->GravityScale = 1.f;
+		}
+
+		LaunchCharacter(HitVector, false, false);
+		ChangeState(EENEMY_STATE::DAMAGE_AIR, true);
+	}
+	else if (0.f < _AttackInfo->KnockBackPowerZ)
 	{
 		if (m_Info.CurHP <= 0.f)
 		{
 			HPBarWidget->SetVisibility(ESlateVisibility::Hidden);
 			m_TargetComponent->Death();
+
+			if (_AttackInfo->KnockBackPowerXY == 0.f)
+			{
+				ChangeState(EENEMY_STATE::DEATH);
+				return;
+			}
 		}
 
+		m_Fly = true;
 		LaunchCharacter(HitVector, false, false);
 		ChangeState(EENEMY_STATE::DAMAGE_KNOCKBACK_FLY);
 	}

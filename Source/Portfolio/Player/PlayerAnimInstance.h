@@ -60,4 +60,7 @@ private:
 
 	UFUNCTION()
 	void AnimNotify_JumpLoop();
+
+	UFUNCTION()
+	void AnimNotify_UpperStartEnd();
 };

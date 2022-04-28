@@ -47,6 +47,7 @@ private:
 	bool m_PressAKey;
 	bool m_PressDKey;
 	int m_ComboBCount;
+	bool m_PressSpecialAttackKey;
 
 	bool m_IsSlowTime;
 	float m_CurSlowPower;
@@ -112,6 +113,7 @@ public:
 
 public:
 	void Attack();
+	void Upper();
 	bool HitProcess(const FHitResult& _HitResult, const FAttackInfo* _AttackInfo);
 	void SlowTime(float _Power, float _Time);
 	void SlowTimeCheck();
@@ -138,6 +140,8 @@ private:
 	void EvadeAction();
 	void LockOnDownAction();
 	void LockOnUpAction();
+	void SpecialAttackDownAction();
+	void SpecialAttackUpAction();
 
 private:
 	bool IsPressMoveKey();

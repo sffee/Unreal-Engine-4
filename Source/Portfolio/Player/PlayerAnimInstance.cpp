@@ -127,3 +127,12 @@ void UPlayerAnimInstance::AnimNotify_JumpLoop()
 		Player->ChangeState(EPLAYER_STATE::JUMP_LOOP);
 	}
 }
+
+void UPlayerAnimInstance::AnimNotify_UpperStartEnd()
+{
+	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
+	if (Player != nullptr)
+	{
+		Player->Upper();
+	}
+}

@@ -11,6 +11,7 @@ AEnemyBase::AEnemyBase()
 	, m_Dissolve(false)
 	, m_Attack(false)
 	, m_Damage(false)
+	, m_Fly(false)
 {
 	AIControllerClass = AEnemyAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;

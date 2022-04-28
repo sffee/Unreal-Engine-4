@@ -18,6 +18,7 @@ AMyPlayer::AMyPlayer()
 	, m_PressSKey(false)
 	, m_PressAKey(false)
 	, m_PressDKey(false)
+	, m_PressSpecialAttackKey(false)
 	, m_IsSlowTime(false)
 	, m_CurSlowPower(0.f)
 	, m_CurSlowTime(0.f)
@@ -222,6 +223,9 @@ void AMyPlayer::SetupPlayerInputComponent(class UInputComponent* PlayerInputComp
 
 	PlayerInputComponent->BindAction(TEXT("LockOn"), EInputEvent::IE_Pressed, this, &AMyPlayer::LockOnDownAction);
 	PlayerInputComponent->BindAction(TEXT("LockOn"), EInputEvent::IE_Released, this, &AMyPlayer::LockOnUpAction);
+
+	PlayerInputComponent->BindAction(TEXT("SpecialAttack"), EInputEvent::IE_Pressed, this, &AMyPlayer::SpecialAttackDownAction);
+	PlayerInputComponent->BindAction(TEXT("SpecialAttack"), EInputEvent::IE_Released, this, &AMyPlayer::SpecialAttackUpAction);
 }
 
 void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
@@ -235,7 +239,7 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 
 	m_Moveable = true;
 
-	if (EPLAYER_STATE::SWORD_COMBO_A_1 <= m_State && m_State <= EPLAYER_STATE::SWORD_JUMP_COMBO_B_1)
+	if (EPLAYER_STATE::SWORD_COMBO_A_1 <= m_State && m_State <= EPLAYER_STATE::SWORD_UPPER_JUMP)
 	{
 		m_Attacking = true;
 		m_Moveable = false;
@@ -251,8 +255,11 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 	if (_NextState == EPLAYER_STATE::EVADE)
 		m_AttackCancleable = false;
 
-	if (m_State == EPLAYER_STATE::EVADE && m_State != _NextState)
-		GetCapsuleComponent()->SetCollisionProfileName(TEXT("Player"));
+	if (m_State != _NextState)
+	{
+		if (m_State == EPLAYER_STATE::EVADE)
+			GetCapsuleComponent()->SetCollisionProfileName(TEXT("Player"));
+	}
 
 	PlayMontage(m_State);
 
@@ -277,6 +284,7 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 	case EPLAYER_STATE::JUMP_SECOND:
 		m_JumpSecond = true;
 	case EPLAYER_STATE::JUMP:
+	case EPLAYER_STATE::JUMP_LOOP:
 		m_Jump = true;
 		GetCharacterMovement()->MaxWalkSpeed = 800.f;
 		m_Moveable = false;
@@ -327,6 +335,21 @@ void AMyPlayer::Attack()
 			//DrawDebugSphere(GetWorld(), vPos, AttackInfo->Radius, 20, color, false, 2.5f);
 #endif
 		}
+	}
+}
+
+void AMyPlayer::Upper()
+{
+	if (m_PressSpecialAttackKey == false)
+	{
+		ChangeState(EPLAYER_STATE::SWORD_UPPER);
+	}
+	else
+	{
+		GetCharacterMovement()->JumpZVelocity = 1300.f;
+		Jump();
+		m_JumpAttack = false;
+		ChangeState(EPLAYER_STATE::SWORD_UPPER_JUMP);
 	}
 }
 
@@ -512,12 +535,15 @@ void AMyPlayer::AttackAction()
 	if (m_AttackCancleable == false)
 		return;
 
-	if ((m_State == EPLAYER_STATE::JUMP || m_State == EPLAYER_STATE::JUMP_LOOP || m_State == EPLAYER_STATE::JUMP_SECOND) && m_JumpAttack == false)
+	if (EPLAYER_STATE::SWORD_UPPER_JUMP <= m_State && m_State <= EPLAYER_STATE::JUMP_LOOP)
 	{
-		m_JumpAttack = true;
-		GetCharacterMovement()->Velocity = FVector::ZeroVector;
-		LookToLockOnTarget();
-		ChangeState(EPLAYER_STATE::SWORD_JUMP_COMBO_A_1);
+		if (m_JumpAttack == false)
+		{
+			m_JumpAttack = true;
+			GetCharacterMovement()->Velocity = FVector::ZeroVector;
+			LookToLockOnTarget();
+			ChangeState(EPLAYER_STATE::SWORD_JUMP_COMBO_A_1);
+		}
 	}
 	else if (EPLAYER_STATE::SWORD_JUMP_COMBO_A_1 <= m_State && m_State <= EPLAYER_STATE::SWORD_JUMP_COMBO_A_2)
 	{
@@ -637,6 +663,30 @@ void AMyPlayer::LockOnUpAction()
 	m_PressLockOn = false;
 	
 	m_LockOnArm->LockOn();
+}
+
+void AMyPlayer::SpecialAttackDownAction()
+{
+	if (m_AttackCancleable == false)
+		return;
+
+	if (EPLAYER_STATE::SWORD_UPPER_START <= m_State && m_State <= EPLAYER_STATE::SWORD_UPPER_JUMP)
+		return;
+
+	if (m_PressSKey == true)
+	{
+		m_PressSpecialAttackKey = true;
+
+		if (m_LockOnArm->IsLockOn())
+			LookToLockOnTarget();
+
+		ChangeState(EPLAYER_STATE::SWORD_UPPER_START);
+	}
+}
+
+void AMyPlayer::SpecialAttackUpAction()
+{
+	m_PressSpecialAttackKey = false;
 }
 
 void AMyPlayer::OnBeginOverlap(UPrimitiveComponent* _PrimitiveComponent, AActor* _OtherActor, UPrimitiveComponent* _OtherComp, int32 _OtherBodyIndex, bool _bFromSweep, const FHitResult& _SweepResult)

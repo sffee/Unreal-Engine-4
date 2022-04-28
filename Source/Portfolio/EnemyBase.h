@@ -47,6 +47,7 @@ protected:
 
 	bool m_Attack;
 	bool m_Damage;
+	bool m_Fly;
 
 protected:
 	bool m_FlyDownCheck;

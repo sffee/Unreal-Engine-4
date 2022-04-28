@@ -40,4 +40,7 @@ public:
 
 	UFUNCTION()
 	void AnimNotify_Dissolve();
+
+	UFUNCTION()
+	void AnimNotify_DamageAirEnd();
 };

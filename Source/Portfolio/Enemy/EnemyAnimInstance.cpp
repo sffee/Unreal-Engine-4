@@ -68,3 +68,13 @@ void UEnemyAnimInstance::AnimNotify_Dissolve()
 		Enemy->Dissolve();
 	}
 }
+
+void UEnemyAnimInstance::AnimNotify_DamageAirEnd()
+{
+	AEnemyBase* Enemy = Cast<AEnemyBase>(TryGetPawnOwner());
+	if (Enemy != nullptr)
+	{
+		Enemy->GetCharacterMovement()->GravityScale = 1.f;
+		Enemy->ChangeState(EENEMY_STATE::DAMAGE_KNOCKBACK_FLY);
+	}
+}
