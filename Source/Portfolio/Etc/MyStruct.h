@@ -133,6 +133,14 @@ struct FAttackMoveInfo : public FTableRowBase
 {
 	GENERATED_BODY()
 
+	FAttackMoveInfo()
+		: StartSpeed(0.f)
+	{
+	}
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	float StartSpeed;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
 	float MaxWalkSpeed;
 

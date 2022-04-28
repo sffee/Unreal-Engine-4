@@ -63,4 +63,16 @@ private:
 
 	UFUNCTION()
 	void AnimNotify_UpperStartEnd();
+
+	UFUNCTION()
+	void AnimNotify_Jump();
+
+	UFUNCTION()
+	void AnimNotify_DashAttackRunStart();
+
+	UFUNCTION()
+	void AnimNotify_DashAttackRunLoop();
+
+	UFUNCTION()
+	void AnimNotify_DashAttackFinishEnd();
 };

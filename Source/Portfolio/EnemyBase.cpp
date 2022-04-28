@@ -21,6 +21,8 @@ AEnemyBase::AEnemyBase()
 
 	m_TargetComponent = CreateDefaultSubobject<UTargetComponent>(TEXT("Target"));
 	m_TargetComponent->SetupAttachment(GetMesh(), TEXT("LockOn"));
+
+	JumpMaxCount = 2;
 }
 
 void AEnemyBase::BeginPlay()

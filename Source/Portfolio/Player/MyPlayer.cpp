@@ -26,6 +26,8 @@ AMyPlayer::AMyPlayer()
 	, m_Jump(false)
 	, m_JumpSecond(false)
 	, m_JumpAttack(false)
+	, m_JumpAttackB(false)
+	, m_DashAttackTimer(0.f)
 {
 	m_LockOnArm = CreateDefaultSubobject<ULockOnArmComponent>(TEXT("LockOnArm"));
 	m_Cam = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
@@ -73,11 +75,12 @@ void AMyPlayer::BeginPlay()
 	CameraManager->ViewPitchMin = -30.f;
 
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AMyPlayer::OnBeginOverlap);
+	//GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AMyPlayer::OnHit);
 
 	m_EtcMesh.Add(Cast<USkeletalMeshComponent>(GetDefaultSubobjectByName(TEXT("Wing"))));
 	m_EtcMesh.Add(Cast<USkeletalMeshComponent>(GetDefaultSubobjectByName(TEXT("Sword"))));
 
-	JumpMaxCount = 2;
+	JumpMaxCount = 3;
 }
 
 void AMyPlayer::Tick(float DeltaTime)
@@ -88,6 +91,7 @@ void AMyPlayer::Tick(float DeltaTime)
 	JumpUpdate();
 	CheckRunAnimation();
 	AttackMove();
+	DashAttackUpdate(DeltaTime);
 	SlowTimeCheck();
 	LockOnCameraUpdate(DeltaTime);
 }
@@ -127,11 +131,41 @@ void AMyPlayer::HUDUpdate()
 
 void AMyPlayer::JumpUpdate()
 {
-	if (m_Jump == true)
+	if (m_Jump == true && m_State == EPLAYER_STATE::JUMP_LOOP)
 	{
 		if (GetMovementComponent()->IsMovingOnGround())
 		{
 			ChangeState(EPLAYER_STATE::JUMP_LANDING);
+		}
+	}
+}
+
+void AMyPlayer::DashAttackUpdate(float _DeltaTime)
+{
+	if (EPLAYER_STATE::SWORD_DASHATTACK_START <= m_State && m_State <= EPLAYER_STATE::SWORD_DASHATTACK_RUN_LOOP)
+	{
+		FVector vPos = GetActorLocation() + (GetActorForwardVector() * 200.f);
+
+		TArray<FHitResult> arrHit;
+		FCollisionQueryParams param(NAME_None, false, this);
+
+		GetWorld()->SweepMultiByChannel(arrHit, vPos, vPos, FQuat::Identity
+			, ECC_GameTraceChannel3
+			, FCollisionShape::MakeSphere(100.f), param);
+
+		if (arrHit.Num())
+		{
+			ChangeState(EPLAYER_STATE::SWORD_DASHATTACK_FINISH_START);
+			return;
+		}
+	}
+
+	if (m_State == EPLAYER_STATE::SWORD_DASHATTACK_RUN_LOOP)
+	{
+		m_DashAttackTimer += _DeltaTime;
+		if (0.7f <= m_DashAttackTimer)
+		{
+			ChangeState(EPLAYER_STATE::SWORD_DASHATTACK_FINISH_START);
 		}
 	}
 }
@@ -245,6 +279,12 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 		m_Moveable = false;
 		m_AttackCancleable = false;
 	}
+	else if (EPLAYER_STATE::SWORD_DASHATTACK_START <= m_State && m_State <= EPLAYER_STATE::SWORD_DASHATTACK_FINISH_END)
+	{
+		m_Attacking = true;
+		m_Moveable = false;
+		m_AttackCancleable = false;
+	}
 	else
 	{
 		m_Attacking = false;
@@ -292,8 +332,13 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 	case EPLAYER_STATE::JUMP_LANDING:
 		m_Jump = false;
 		m_JumpSecond = false;
+		m_JumpAttack = false;
+		m_JumpAttackB = false;
 		GetCharacterMovement()->MaxWalkSpeed = 800.f;
 		m_Moveable = false;
+		break;
+	case EPLAYER_STATE::SWORD_DASHATTACK_FINISH_START:
+		GetCharacterMovement()->Velocity /= 3.f;
 		break;
 	default:
 		break;
@@ -348,7 +393,9 @@ void AMyPlayer::Upper()
 	{
 		GetCharacterMovement()->JumpZVelocity = 1300.f;
 		Jump();
+		m_Jump = true;
 		m_JumpAttack = false;
+		m_JumpAttackB = false;
 		ChangeState(EPLAYER_STATE::SWORD_UPPER_JUMP);
 	}
 }
@@ -430,6 +477,7 @@ void AMyPlayer::AttackMoveSpeedSetting(EPLAYER_STATE _State)
 		{
 			GetMovementComponent()->StopMovementImmediately();
 
+			GetCharacterMovement()->Velocity = GetActorForwardVector() * AttackMoveInfo->StartSpeed;
 			GetCharacterMovement()->MaxWalkSpeed = AttackMoveInfo->MaxWalkSpeed;
 			GetCharacterMovement()->MaxAcceleration = AttackMoveInfo->MaxAcceleration;
 		}
@@ -509,6 +557,7 @@ void AMyPlayer::JumpAction()
 	if (m_Jump == false)
 	{
 		m_JumpAttack = false;
+		m_JumpAttackB = false;
 
 		Jump();
 
@@ -535,7 +584,12 @@ void AMyPlayer::AttackAction()
 	if (m_AttackCancleable == false)
 		return;
 
-	if (EPLAYER_STATE::SWORD_UPPER_JUMP <= m_State && m_State <= EPLAYER_STATE::JUMP_LOOP)
+	if (EPLAYER_STATE::SWORD_JUMP_COMBO_A_1 <= m_State && m_State <= EPLAYER_STATE::SWORD_JUMP_COMBO_A_2)
+	{
+		LookToLockOnTarget();
+		ChangeState((EPLAYER_STATE)((int)m_State + 1));
+	}
+	else if (m_Jump == true || m_State == EPLAYER_STATE::SWORD_UPPER_JUMP)
 	{
 		if (m_JumpAttack == false)
 		{
@@ -544,11 +598,6 @@ void AMyPlayer::AttackAction()
 			LookToLockOnTarget();
 			ChangeState(EPLAYER_STATE::SWORD_JUMP_COMBO_A_1);
 		}
-	}
-	else if (EPLAYER_STATE::SWORD_JUMP_COMBO_A_1 <= m_State && m_State <= EPLAYER_STATE::SWORD_JUMP_COMBO_A_2)
-	{
-		LookToLockOnTarget();
-		ChangeState((EPLAYER_STATE)((int)m_State + 1));
 	}
 	else if (EPLAYER_STATE::SWORD_COMBO_A_1 <= m_State
 		&& m_State < EPLAYER_STATE::SWORD_COMBO_A_5)
@@ -568,7 +617,18 @@ void AMyPlayer::AttackRAction()
 	if (m_AttackCancleable == false)
 		return;
 
-	if (m_State == EPLAYER_STATE::SWORD_COMBO_B_1)
+	if (m_Jump == true)
+	{
+		if (m_JumpAttackB == false || m_State == EPLAYER_STATE::SWORD_UPPER_JUMP)
+		{
+			m_JumpAttack = false;
+			m_JumpAttackB = true;
+			LookToLockOnTarget();
+			GetCharacterMovement()->Velocity = FVector::ZeroVector;
+			ChangeState(EPLAYER_STATE::SWORD_JUMP_COMBO_B_1);
+		}
+	}
+	else if (m_State == EPLAYER_STATE::SWORD_COMBO_B_1)
 	{
 		LookToLockOnTarget();
 		ChangeState(EPLAYER_STATE::SWORD_COMBO_B_2);
@@ -603,7 +663,7 @@ void AMyPlayer::AttackRAction()
 
 void AMyPlayer::EvadeAction()
 {
-	if (m_State == EPLAYER_STATE::EVADE)
+	if (m_State == EPLAYER_STATE::EVADE || m_Jump == true)
 		return;
 
 	FRotator Rot = GetControlRotation();
@@ -667,7 +727,7 @@ void AMyPlayer::LockOnUpAction()
 
 void AMyPlayer::SpecialAttackDownAction()
 {
-	if (m_AttackCancleable == false)
+	if (m_Jump == true)
 		return;
 
 	if (EPLAYER_STATE::SWORD_UPPER_START <= m_State && m_State <= EPLAYER_STATE::SWORD_UPPER_JUMP)
@@ -681,6 +741,16 @@ void AMyPlayer::SpecialAttackDownAction()
 			LookToLockOnTarget();
 
 		ChangeState(EPLAYER_STATE::SWORD_UPPER_START);
+	}
+	else if (m_PressWKey == true)
+	{
+		m_PressSpecialAttackKey = true;
+
+		if (m_LockOnArm->IsLockOn())
+			LookToLockOnTarget();
+
+		m_DashAttackTimer = 0.f;
+		ChangeState(EPLAYER_STATE::SWORD_DASHATTACK_START);
 	}
 }
 

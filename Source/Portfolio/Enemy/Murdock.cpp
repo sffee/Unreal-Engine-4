@@ -96,6 +96,8 @@ void AMurdock::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
 	HitVector.Y *= _AttackInfo->KnockBackPowerXY;
 	HitVector.Z = _AttackInfo->KnockBackPowerZ;
 
+	GetCharacterMovement()->Velocity = FVector::ZeroVector;
+
 	if (m_Fly == true)
 	{
 		if (HitVector.Z == 0.f)

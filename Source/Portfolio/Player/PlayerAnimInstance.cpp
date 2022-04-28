@@ -133,6 +133,44 @@ void UPlayerAnimInstance::AnimNotify_UpperStartEnd()
 	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
 	if (Player != nullptr)
 	{
+		Player->GetCharacterMovement()->Velocity = FVector::ZeroVector;
 		Player->Upper();
+	}
+}
+
+void UPlayerAnimInstance::AnimNotify_Jump()
+{
+	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
+	if (Player != nullptr)
+	{
+		Player->Jump();
+	}
+}
+
+void UPlayerAnimInstance::AnimNotify_DashAttackRunStart()
+{
+	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
+	if (Player != nullptr)
+	{
+		m_State = EPLAYER_STATE::SWORD_DASHATTACK_RUN_START;
+		Player->ChangeState(EPLAYER_STATE::SWORD_DASHATTACK_RUN_START);
+	}
+}
+
+void UPlayerAnimInstance::AnimNotify_DashAttackRunLoop()
+{
+	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
+	if (Player != nullptr)
+	{
+		Player->ChangeState(EPLAYER_STATE::SWORD_DASHATTACK_RUN_LOOP);
+	}
+}
+
+void UPlayerAnimInstance::AnimNotify_DashAttackFinishEnd()
+{
+	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
+	if (Player != nullptr)
+	{
+		Player->ChangeState(EPLAYER_STATE::SWORD_DASHATTACK_FINISH_END);
 	}
 }

@@ -59,6 +59,9 @@ private:
 	bool m_Jump;
 	bool m_JumpSecond;
 	bool m_JumpAttack;
+	bool m_JumpAttackB;
+
+	float m_DashAttackTimer;
 
 public:
 	AMyPlayer();
@@ -122,6 +125,7 @@ private:
 	void LockOnCameraUpdate(float _DeltaTime);
 	void HUDUpdate();
 	void JumpUpdate();
+	void DashAttackUpdate(float _DeltaTime);
 
 private:
 	void AttackMove();
@@ -149,4 +153,7 @@ private:
 private:
 	UFUNCTION()
 	void OnBeginOverlap(UPrimitiveComponent* _PrimitiveComponent, AActor* _OtherActor, UPrimitiveComponent* _OtherComp, int32 _OtherBodyIndex, bool _bFromSweep, const FHitResult& _SweepResult);
+
+	//UFUNCTION()
+	//virtual void OnHit(UPrimitiveComponent* _HitComponent, AActor* _OtherActor, UPrimitiveComponent* _OtherComp, FVector _NormalImpulse, const FHitResult& Hit);
 };
