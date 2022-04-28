@@ -28,6 +28,7 @@ AMyPlayer::AMyPlayer()
 	, m_JumpAttack(false)
 	, m_JumpAttackB(false)
 	, m_DashAttackTimer(0.f)
+	, m_LoopAttackCheck(false)
 {
 	m_LockOnArm = CreateDefaultSubobject<ULockOnArmComponent>(TEXT("LockOnArm"));
 	m_Cam = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
@@ -94,6 +95,7 @@ void AMyPlayer::Tick(float DeltaTime)
 	DashAttackUpdate(DeltaTime);
 	SlowTimeCheck();
 	LockOnCameraUpdate(DeltaTime);
+	LoopAttackUpdate();
 }
 
 void AMyPlayer::LockOnCameraUpdate(float _DeltaTime)
@@ -131,11 +133,15 @@ void AMyPlayer::HUDUpdate()
 
 void AMyPlayer::JumpUpdate()
 {
-	if (m_Jump == true && m_State == EPLAYER_STATE::JUMP_LOOP)
+	if (m_Jump == true && GetMovementComponent()->IsMovingOnGround())
 	{
-		if (GetMovementComponent()->IsMovingOnGround())
+		if (m_State == EPLAYER_STATE::JUMP_LOOP)
 		{
 			ChangeState(EPLAYER_STATE::JUMP_LANDING);
+		}
+		else if (m_State == EPLAYER_STATE::SWORD_JUMP_DOWNATTACK_LOOP)
+		{
+			ChangeState(EPLAYER_STATE::SWORD_JUMP_DOWNATTACK_END);
 		}
 	}
 }
@@ -168,6 +174,14 @@ void AMyPlayer::DashAttackUpdate(float _DeltaTime)
 			ChangeState(EPLAYER_STATE::SWORD_DASHATTACK_FINISH_START);
 		}
 	}
+}
+
+void AMyPlayer::LoopAttackUpdate()
+{
+	if (m_LoopAttackCheck == false)
+		return;
+
+	Attack();
 }
 
 void AMyPlayer::TableSetting()
@@ -305,14 +319,28 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 
 	switch (m_State)
 	{
+	case EPLAYER_STATE::SWORD_IDLE_L:
+	case EPLAYER_STATE::SWORD_IDLE_R:
+		m_Attacking = false;
+		m_Moveable = true;
+		m_AttackMove = false;
+		m_AttackCancleable = true;
+		SetDamage(false);
+		break;
 	case EPLAYER_STATE::SWORD_RUN:
 		GetCharacterMovement()->MaxWalkSpeed = 800.f;
 		GetCharacterMovement()->MaxAcceleration = 2048.f;
+		m_Attacking = false;
+		m_Moveable = true;
+		m_AttackMove = false;
+		m_AttackCancleable = true;
+		SetDamage(false);
 		break;
 	case EPLAYER_STATE::SWORD_RUN_END:
 		GetCharacterMovement()->Velocity /= 1.3f;
 		break;
 	case EPLAYER_STATE::DAMAGE:
+		m_Damage = true;
 		m_Moveable = false;
 		break;
 	case EPLAYER_STATE::EVADE:
@@ -330,6 +358,7 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 		m_Moveable = false;
 		break;
 	case EPLAYER_STATE::JUMP_LANDING:
+	case EPLAYER_STATE::SWORD_JUMP_DOWNATTACK_END:
 		m_Jump = false;
 		m_JumpSecond = false;
 		m_JumpAttack = false;
@@ -356,7 +385,7 @@ void AMyPlayer::Attack()
 		FAttackInfo* AttackInfo = m_AttackInfoTable->FindRow<FAttackInfo>(Section, TEXT(""));
 		if (AttackInfo != nullptr)
 		{
-			FVector vPos = GetActorLocation() + FVector(AttackInfo->XPivot, 0.f, 0.f);
+			FVector vPos = GetActorLocation() + (GetActorForwardVector() * AttackInfo->XPivot);
 
 			TArray<FHitResult> arrHit;
 			FCollisionQueryParams param(NAME_None, false, this);
@@ -371,13 +400,25 @@ void AMyPlayer::Attack()
 			{
 				for (size_t i = 0; i < arrHit.Num(); ++i)
 				{
-					HitSuccess = HitProcess(arrHit[i], AttackInfo);
+					if (m_LoopAttackCheck)
+					{
+						if (m_AttackHitActors.Find(arrHit[i].Actor.Get()) != INDEX_NONE)
+							continue;
+					}
+
+					if (HitProcess(arrHit[i], AttackInfo))
+					{
+						HitSuccess = true;
+
+						if (m_LoopAttackCheck)
+							m_AttackHitActors.AddUnique(arrHit[i].Actor.Get());
+					}
 				}
 			}
 
 #ifdef ENABLE_DRAW_DEBUG
 			//FColor color = HitSuccess ? FColor::Green : FColor::Red;
-			//DrawDebugSphere(GetWorld(), vPos, AttackInfo->Radius, 20, color, false, 2.5f);
+			//DrawDebugSphere(GetWorld(), vPos, AttackInfo->Radius, 20, color, false, 0.1f);
 #endif
 		}
 	}
@@ -554,10 +595,25 @@ void AMyPlayer::LookUp(float _Scale)
 
 void AMyPlayer::JumpAction()
 {
+	if (IsDamage())
+		return;
+
 	if (m_Jump == false)
 	{
 		m_JumpAttack = false;
 		m_JumpAttackB = false;
+
+		if (IsPressMoveKey())
+		{
+			FRotator Rot = GetPressKeyRotation();
+			FVector Direction;
+
+			Rot.Roll = 0.f;
+			Rot.Pitch = 0.f;
+			SetActorRotation(Rot);
+
+			GetCharacterMovement()->Velocity = GetActorForwardVector() * GetCharacterMovement()->MaxWalkSpeed;
+		}
 
 		Jump();
 
@@ -571,6 +627,18 @@ void AMyPlayer::JumpAction()
 	}
 	else if (m_JumpSecond == false)
 	{
+		if (IsPressMoveKey())
+		{
+			FRotator Rot = GetPressKeyRotation();
+			FVector Direction;
+
+			Rot.Roll = 0.f;
+			Rot.Pitch = 0.f;
+			SetActorRotation(Rot);
+
+			GetCharacterMovement()->Velocity = GetActorForwardVector() * GetCharacterMovement()->MaxWalkSpeed;
+		}
+
 		Jump();
 
 		ChangeState(EPLAYER_STATE::JUMP_SECOND);
@@ -581,6 +649,9 @@ void AMyPlayer::JumpAction()
 
 void AMyPlayer::AttackAction()
 {
+	if (IsDamage())
+		return;
+
 	if (m_AttackCancleable == false)
 		return;
 
@@ -614,6 +685,9 @@ void AMyPlayer::AttackAction()
 
 void AMyPlayer::AttackRAction()
 {
+	if (IsDamage())
+		return;
+
 	if (m_AttackCancleable == false)
 		return;
 
@@ -663,36 +737,14 @@ void AMyPlayer::AttackRAction()
 
 void AMyPlayer::EvadeAction()
 {
+	if (IsDamage())
+		return;
+
 	if (m_State == EPLAYER_STATE::EVADE || m_Jump == true)
 		return;
 
-	FRotator Rot = GetControlRotation();
+	FRotator Rot = GetPressKeyRotation();
 	FVector Direction;
-
-	if (m_PressWKey)
-	{
-		if (m_PressAKey)
-			Rot += FRotator(0.f, -45.f, 0.f);
-		else if (m_PressDKey)
-			Rot += FRotator(0.f, 45.f, 0.f);
-	}
-	else if (m_PressSKey)
-	{
-		if (m_PressAKey)
-			Rot += FRotator(0.f, 225.f, 0.f);
-		else if (m_PressDKey)
-			Rot += FRotator(0.f, 135.f, 0.f);
-		else
-			Rot += FRotator(0.f, 180.f, 0.f);
-	}
-	else if (m_PressAKey)
-	{
-		Rot += FRotator(0.f, -90.f, 0.f);
-	}
-	else if (m_PressDKey)
-	{
-		Rot += FRotator(0.f, 90.f, 0.f);
-	}
 
 	Rot.Roll = 0.f;
 	Rot.Pitch = 0.f;
@@ -727,30 +779,49 @@ void AMyPlayer::LockOnUpAction()
 
 void AMyPlayer::SpecialAttackDownAction()
 {
+	if (IsDamage())
+		return;
+
 	if (m_Jump == true)
-		return;
-
-	if (EPLAYER_STATE::SWORD_UPPER_START <= m_State && m_State <= EPLAYER_STATE::SWORD_UPPER_JUMP)
-		return;
-
-	if (m_PressSKey == true)
 	{
-		m_PressSpecialAttackKey = true;
+		if (m_PressSKey == true)
+		{
+			if (EPLAYER_STATE::SWORD_JUMP_DOWNATTACK_START <= m_State && m_State <= EPLAYER_STATE::SWORD_JUMP_DOWNATTACK_END)
+				return;
 
-		if (m_LockOnArm->IsLockOn())
-			LookToLockOnTarget();
+			if (m_LockOnArm->IsLockOn())
+				LookToLockOnTarget();
 
-		ChangeState(EPLAYER_STATE::SWORD_UPPER_START);
+			ChangeState(EPLAYER_STATE::SWORD_JUMP_DOWNATTACK_START);
+		}
 	}
-	else if (m_PressWKey == true)
+	else
 	{
-		m_PressSpecialAttackKey = true;
+		if (EPLAYER_STATE::SWORD_UPPER_START <= m_State && m_State <= EPLAYER_STATE::SWORD_DASHATTACK_FINISH_START)
+			return;
 
-		if (m_LockOnArm->IsLockOn())
-			LookToLockOnTarget();
+		if (m_PressSKey == true)
+		{
+			m_PressSpecialAttackKey = true;
 
-		m_DashAttackTimer = 0.f;
-		ChangeState(EPLAYER_STATE::SWORD_DASHATTACK_START);
+			if (m_LockOnArm->IsLockOn())
+				LookToLockOnTarget();
+
+			ChangeState(EPLAYER_STATE::SWORD_UPPER_START);
+		}
+		else if (m_PressWKey == true)
+		{
+			if (m_State == EPLAYER_STATE::SWORD_DASHATTACK_FINISH_END)
+				return;
+
+			m_PressSpecialAttackKey = true;
+
+			if (m_LockOnArm->IsLockOn())
+				LookToLockOnTarget();
+
+			m_DashAttackTimer = 0.f;
+			ChangeState(EPLAYER_STATE::SWORD_DASHATTACK_START);
+		}
 	}
 }
 
@@ -782,11 +853,44 @@ void AMyPlayer::OnBeginOverlap(UPrimitiveComponent* _PrimitiveComponent, AActor*
 		HitVector.Z = 0.f;
 		LaunchCharacter(HitVector, false, false);
 
-		ChangeState(EPLAYER_STATE::DAMAGE, true);
+		if (m_Jump == false)
+			ChangeState(EPLAYER_STATE::DAMAGE, true);
 	}
 }
 
 bool AMyPlayer::IsPressMoveKey()
 {
 	return m_PressWKey || m_PressSKey || m_PressAKey || m_PressDKey;
+}
+
+FRotator AMyPlayer::GetPressKeyRotation()
+{
+	FRotator Rot = GetControlRotation();
+
+	if (m_PressWKey)
+	{
+		if (m_PressAKey)
+			Rot += FRotator(0.f, -45.f, 0.f);
+		else if (m_PressDKey)
+			Rot += FRotator(0.f, 45.f, 0.f);
+	}
+	else if (m_PressSKey)
+	{
+		if (m_PressAKey)
+			Rot += FRotator(0.f, 225.f, 0.f);
+		else if (m_PressDKey)
+			Rot += FRotator(0.f, 135.f, 0.f);
+		else
+			Rot += FRotator(0.f, 180.f, 0.f);
+	}
+	else if (m_PressAKey)
+	{
+		Rot += FRotator(0.f, -90.f, 0.f);
+	}
+	else if (m_PressDKey)
+	{
+		Rot += FRotator(0.f, 90.f, 0.f);
+	}
+
+	return Rot;
 }

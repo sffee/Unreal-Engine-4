@@ -10,7 +10,6 @@ AEnemyBase::AEnemyBase()
 	: m_FlyDownCheck(false)
 	, m_Dissolve(false)
 	, m_Attack(false)
-	, m_Damage(false)
 	, m_Fly(false)
 {
 	AIControllerClass = AEnemyAIController::StaticClass();
@@ -113,6 +112,16 @@ void AEnemyBase::LookToPlayer()
 	MyRot.Yaw = TargetRot.Yaw;
 
 	SetActorRotation(MyRot);
+}
+
+FRotator AEnemyBase::GetRotationToPlayer()
+{
+	AMyPlayer* Player = Cast<AMyPlayer>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetPawn());
+
+	FVector TargetDir = Player->GetActorLocation() - GetActorLocation();
+	FRotator TargetRot = TargetDir.GetSafeNormal().Rotation();
+	
+	return TargetRot;
 }
 
 void AEnemyBase::DissolveUpdate(float _DeltaTime)

@@ -174,3 +174,40 @@ void UPlayerAnimInstance::AnimNotify_DashAttackFinishEnd()
 		Player->ChangeState(EPLAYER_STATE::SWORD_DASHATTACK_FINISH_END);
 	}
 }
+
+void UPlayerAnimInstance::AnimNotify_JumpDownAttackLoop()
+{
+	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
+	if (Player != nullptr)
+	{
+		Player->GetCharacterMovement()->Velocity = FVector(0.f, 0.f, -2500.f);
+		Player->ChangeState(EPLAYER_STATE::SWORD_JUMP_DOWNATTACK_LOOP);
+	}
+}
+
+void UPlayerAnimInstance::AnimNotify_LoopAttackStart()
+{
+	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
+	if (Player != nullptr)
+	{
+		Player->SetLoopAttackCheck(true);
+	}
+}
+
+void UPlayerAnimInstance::AnimNotify_LoopAttackEnd()
+{
+	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
+	if (Player != nullptr)
+	{
+		Player->SetLoopAttackCheck(false);
+	}
+}
+
+void UPlayerAnimInstance::AnimNotify_DamageEnd()
+{
+	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
+	if (Player != nullptr)
+	{
+		Player->SetDamage(false);
+	}
+}

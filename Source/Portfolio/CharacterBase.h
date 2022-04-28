@@ -24,6 +24,19 @@ protected:
 	bool m_HitEffect;
 	float m_HitEffectTimer;
 
+	bool m_Damage;
+
+public:
+	bool IsDamage()
+	{
+		return m_Damage;
+	}
+
+	void SetDamage(bool _Set)
+	{
+		m_Damage = _Set;
+	}
+
 public:
 	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo);
 	void SpawnProjectile(TSubclassOf<AProjectile> _Particle, const FVector& _Position, const FRotator& _Rotation, const FVector& _Velocity);

@@ -46,7 +46,6 @@ protected:
 	float m_DissolveProgress;
 
 	bool m_Attack;
-	bool m_Damage;
 	bool m_Fly;
 
 protected:
@@ -78,11 +77,6 @@ public:
 		return m_Attack;
 	}
 
-	bool IsDamage()
-	{
-		return m_Damage;
-	}
-
 public:
 	AEnemyBase();
 
@@ -112,6 +106,7 @@ public:
 
 protected:
 	void LookToPlayer();
+	FRotator GetRotationToPlayer();
 
 private:
 	void DissolveUpdate(float _DeltaTime);

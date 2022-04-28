@@ -63,6 +63,9 @@ private:
 
 	float m_DashAttackTimer;
 
+	bool m_LoopAttackCheck;
+	TArray<AActor*> m_AttackHitActors;
+
 public:
 	AMyPlayer();
 
@@ -96,6 +99,14 @@ public:
 		GetCapsuleComponent()->SetCollisionProfileName(TEXT("Player"));
 	}
 
+	void SetLoopAttackCheck(bool _Set)
+	{
+		if (_Set)
+			m_AttackHitActors.Empty();
+
+		m_LoopAttackCheck = _Set;
+	}
+
 private:
 	void PlayMontage(EPLAYER_STATE _State);
 
@@ -126,6 +137,7 @@ private:
 	void HUDUpdate();
 	void JumpUpdate();
 	void DashAttackUpdate(float _DeltaTime);
+	void LoopAttackUpdate();
 
 private:
 	void AttackMove();
@@ -149,11 +161,9 @@ private:
 
 private:
 	bool IsPressMoveKey();
+	FRotator GetPressKeyRotation();
 
 private:
 	UFUNCTION()
 	void OnBeginOverlap(UPrimitiveComponent* _PrimitiveComponent, AActor* _OtherActor, UPrimitiveComponent* _OtherComp, int32 _OtherBodyIndex, bool _bFromSweep, const FHitResult& _SweepResult);
-
-	//UFUNCTION()
-	//virtual void OnHit(UPrimitiveComponent* _HitComponent, AActor* _OtherActor, UPrimitiveComponent* _OtherComp, FVector _NormalImpulse, const FHitResult& Hit);
 };

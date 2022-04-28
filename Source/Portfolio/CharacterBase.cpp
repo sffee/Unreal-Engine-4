@@ -2,6 +2,7 @@
 
 ACharacterBase::ACharacterBase()
 	: m_HitEffect(false)
+	, m_Damage(false)
 {
 	PrimaryActorTick.bCanEverTick = true;
 

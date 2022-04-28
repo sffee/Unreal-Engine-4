@@ -151,7 +151,9 @@ bool AMurdock::Attack()
 		return false;
 
 	AMyPlayer* Player = Cast<AMyPlayer>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetPawn());
-	float Distance = FVector::Distance(GetActorLocation(), Player->GetActorLocation());
+	FVector PlayerPos = Player->GetActorLocation();
+	PlayerPos.Z = GetActorLocation().Z;
+	float Distance = FVector::Distance(GetActorLocation(), PlayerPos);
 
 	if (Distance <= m_AttackDistance)
 	{
@@ -166,8 +168,10 @@ bool AMurdock::Attack()
 
 void AMurdock::Fire()
 {
+	AMyPlayer* Player = Cast<AMyPlayer>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetPawn());
+
 	FVector Pos = GetActorLocation();
-	FRotator Rot = GetActorRotation();
-	FVector Velocity = GetActorForwardVector();
-	SpawnProjectile(m_AttackProjectile, Pos, Rot, Velocity);
+	FVector Velocity = (Player->GetActorLocation() - Pos).GetSafeNormal();
+
+	SpawnProjectile(m_AttackProjectile, Pos, GetRotationToPlayer(), Velocity);
 }

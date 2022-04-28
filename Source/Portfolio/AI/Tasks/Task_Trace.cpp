@@ -28,7 +28,7 @@ EBTNodeResult::Type UTask_Trace::ExecuteTask(UBehaviorTreeComponent& OwnerComp, 
 	if (Enemy == nullptr)
 		return EBTNodeResult::Failed;
 
-	if (Enemy->IsAttack())
+	if (Enemy->IsAttack() || Enemy->IsDamage())
 		return EBTNodeResult::Failed;
 
 	EENEMY_STATE State = Enemy->GetState();
@@ -37,7 +37,9 @@ EBTNodeResult::Type UTask_Trace::ExecuteTask(UBehaviorTreeComponent& OwnerComp, 
 
 	Enemy->ChangeState(EENEMY_STATE::RUN);
 
-	UAIBlueprintHelperLibrary::SimpleMoveToActor(Controller, Player);
+	FVector PlayerPos = Player->GetActorLocation();
+	PlayerPos.Z = Controller->GetPawn()->GetActorLocation().Z;
+	UAIBlueprintHelperLibrary::SimpleMoveToLocation(Controller, PlayerPos);
 
 	return EBTNodeResult::Succeeded;
 }
