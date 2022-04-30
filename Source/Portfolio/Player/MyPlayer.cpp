@@ -839,6 +839,9 @@ void AMyPlayer::OnBeginOverlap(UPrimitiveComponent* _PrimitiveComponent, AActor*
 		AProjectile* Projectile = Cast<AProjectile>(_OtherActor);
 		m_Info.CurHP -= Projectile->GetDamage();
 
+		if (m_Jump == true)
+			return;
+
 		FVector TargetDir = _OtherActor->GetActorLocation() - GetActorLocation();
 		FRotator TargetRot = TargetDir.GetSafeNormal().Rotation();
 		FRotator MyRot = GetControlRotation();
@@ -853,8 +856,7 @@ void AMyPlayer::OnBeginOverlap(UPrimitiveComponent* _PrimitiveComponent, AActor*
 		HitVector.Z = 0.f;
 		LaunchCharacter(HitVector, false, false);
 
-		if (m_Jump == false)
-			ChangeState(EPLAYER_STATE::DAMAGE, true);
+		ChangeState(EPLAYER_STATE::DAMAGE, true);
 	}
 }
 
