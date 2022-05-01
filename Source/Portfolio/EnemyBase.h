@@ -35,7 +35,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
 	UBehaviorTree* m_BehaviorTree;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
 	class UTargetComponent* m_TargetComponent;
+
+	float m_CooltimeWaitDistance;
 
 	UDataTable* m_MontageTable;
 	TMap<EENEMY_STATE, FName> m_MontageMap;
@@ -48,7 +51,13 @@ protected:
 	bool m_Attack;
 	bool m_Fly;
 
+	float m_AttackCooltime[6];
+	float m_RemainAttackCooltime[6];
+
 protected:
+	bool m_LoopAttackCheck;
+	TArray<AActor*> m_AttackHitActors;
+
 	bool m_FlyDownCheck;
 
 public:
@@ -77,6 +86,11 @@ public:
 		return m_Attack;
 	}
 
+	float GetCooltimeWaitDistance()
+	{
+		return m_CooltimeWaitDistance;
+	}
+
 public:
 	AEnemyBase();
 
@@ -97,7 +111,9 @@ public:
 	void Dissolve();
 
 public:
-	virtual bool Attack()
+	virtual void Attack();
+
+	virtual bool AttackCheck()
 	{
 		return false;
 	};
@@ -110,6 +126,8 @@ protected:
 
 private:
 	void DissolveUpdate(float _DeltaTime);
+	bool HitProcess(const FHitResult& _HitResult, const FAttackInfo* _AttackInfo);
+	void CooltimeUpdate(float _DeltaTime);
 
 public:
 	virtual void BeginPlay() override;

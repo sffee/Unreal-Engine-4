@@ -59,6 +59,7 @@ UENUM(BlueprintType)
 enum class EENEMY_STATE : uint8
 {
 	SPAWN,
+	SPAWN_LANDING,
 	IDLE,
 	RUN,
 	ATTACK1,

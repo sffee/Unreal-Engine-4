@@ -29,11 +29,7 @@ private:
 	USkeletalMeshComponent* m_WingMesh;
 	USkeletalMeshComponent* m_SwordMesh;
 
-	UDataTable* m_MontageTable;
 	TMap<EPLAYER_STATE, FName> m_MontageMap;
-
-	UDataTable* m_AttackMoveTable;
-	UDataTable* m_AttackInfoTable;
 
 	UPlayerAnimInstance* m_AnimInst;
 
@@ -48,10 +44,6 @@ private:
 	bool m_PressDKey;
 	int m_ComboBCount;
 	bool m_PressSpecialAttackKey;
-
-	bool m_IsSlowTime;
-	float m_CurSlowPower;
-	float m_CurSlowTime;
 
 	bool m_PressLockOn;
 	float m_PressLockOnTime;
@@ -129,8 +121,6 @@ public:
 	void Attack();
 	void Upper();
 	bool HitProcess(const FHitResult& _HitResult, const FAttackInfo* _AttackInfo);
-	void SlowTime(float _Power, float _Time);
-	void SlowTimeCheck();
 
 private:
 	void LockOnCameraUpdate(float _DeltaTime);
@@ -162,6 +152,9 @@ private:
 private:
 	bool IsPressMoveKey();
 	FRotator GetPressKeyRotation();
+
+public:
+	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo) override;
 
 private:
 	UFUNCTION()

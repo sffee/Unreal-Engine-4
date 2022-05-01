@@ -3,6 +3,9 @@
 ACharacterBase::ACharacterBase()
 	: m_HitEffect(false)
 	, m_Damage(false)
+	, m_IsSlowTime(false)
+	, m_CurSlowPower(0.f)
+	, m_CurSlowTime(0.f)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -19,6 +22,7 @@ void ACharacterBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	HitEffectUpdate(DeltaTime);
+	SlowTimeCheck();
 }
 
 void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -70,5 +74,28 @@ void ACharacterBase::HitEffectUpdate(float _DeltaTime)
 
 		for (int i = 0; i < m_EtcMesh.Num(); i++)
 			m_EtcMesh[i]->SetScalarParameterValueOnMaterials(TEXT("HitEffect_Ratio"), 0.f);
+	}
+}
+
+void ACharacterBase::SlowTime(float _Power, float _Time)
+{
+	check(_Power != 0.f);
+
+	m_IsSlowTime = true;
+	m_CurSlowTime = _Time;
+	m_CurSlowPower = _Power;
+	GetWorldSettings()->SetTimeDilation(_Power);
+}
+
+void ACharacterBase::SlowTimeCheck()
+{
+	if (m_IsSlowTime == false)
+		return;
+
+	m_CurSlowTime -= 1.f / m_CurSlowPower * GetWorld()->GetDeltaSeconds();
+	if (m_CurSlowTime <= 0.f)
+	{
+		m_IsSlowTime = false;
+		GetWorldSettings()->SetTimeDilation(1.f);
 	}
 }

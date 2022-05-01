@@ -32,14 +32,23 @@ EBTNodeResult::Type UTask_Trace::ExecuteTask(UBehaviorTreeComponent& OwnerComp, 
 		return EBTNodeResult::Failed;
 
 	EENEMY_STATE State = Enemy->GetState();
-	if (State == EENEMY_STATE::SPAWN || State == EENEMY_STATE::DEATH)
+	if (State == EENEMY_STATE::SPAWN || State == EENEMY_STATE::SPAWN_LANDING || State == EENEMY_STATE::DEATH)
 		return EBTNodeResult::Failed;
 
-	Enemy->ChangeState(EENEMY_STATE::RUN);
+	float Distance = FVector::Distance(Enemy->GetActorLocation(), Player->GetActorLocation());
+	if (Enemy->GetCooltimeWaitDistance() < Distance)
+	{
+		Enemy->ChangeState(EENEMY_STATE::RUN);
 
-	FVector PlayerPos = Player->GetActorLocation();
-	PlayerPos.Z = Controller->GetPawn()->GetActorLocation().Z;
-	UAIBlueprintHelperLibrary::SimpleMoveToLocation(Controller, PlayerPos);
+		FVector PlayerPos = Player->GetActorLocation();
+		PlayerPos.Z = Controller->GetPawn()->GetActorLocation().Z;
+		UAIBlueprintHelperLibrary::SimpleMoveToLocation(Controller, PlayerPos);
+	}
+	else
+	{
+		Controller->StopMovement();
+		Enemy->ChangeState(EENEMY_STATE::IDLE);
+	}
 
 	return EBTNodeResult::Succeeded;
 }

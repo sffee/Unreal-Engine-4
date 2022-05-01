@@ -1,26 +1,23 @@
 #pragma once
 
-#include "../Projectile/Projectile.h"
-
 #include "CoreMinimal.h"
 #include "../NormalEnemyBase.h"
-#include "Murdock.generated.h"
+#include "Minions.generated.h"
 
 UCLASS()
-class PORTFOLIO_API AMurdock : public ANormalEnemyBase
+class PORTFOLIO_API AMinions : public ANormalEnemyBase
 {
 	GENERATED_BODY()
+	
+public:
+	AMinions();
 
 private:
-	TSubclassOf<AProjectile> m_AttackProjectile;
-
-public:
-	AMurdock();
+	void SpawnUpdate();
 
 public:
 	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo) override;
 	virtual bool AttackCheck() override;
-	virtual void Fire() override;
 
 public:
 	virtual void BeginPlay() override;

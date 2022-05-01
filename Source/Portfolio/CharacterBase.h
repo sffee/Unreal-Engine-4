@@ -18,6 +18,12 @@ public:
 	ACharacterBase();
 
 protected:
+	UDataTable* m_MontageTable;
+
+	UDataTable* m_AttackMoveTable;
+	UDataTable* m_AttackInfoTable;
+
+protected:
 	TArray<USkeletalMeshComponent*> m_EtcMesh;
 
 protected:
@@ -25,6 +31,10 @@ protected:
 	float m_HitEffectTimer;
 
 	bool m_Damage;
+
+	bool m_IsSlowTime;
+	float m_CurSlowPower;
+	float m_CurSlowTime;
 
 public:
 	bool IsDamage()
@@ -43,6 +53,12 @@ public:
 
 protected:
 	void HitEffect();
+
+public:
+	void SlowTime(float _Power, float _Time);
+
+private:
+	void SlowTimeCheck();
 
 public:
 	virtual void BeginPlay() override;

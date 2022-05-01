@@ -1,51 +1,73 @@
-#include "Murdock.h"
+#include "Minions.h"
 
 #include "../Player/MyPlayer.h"
 #include "../Component/TargetComponent.h"
 
 #include "../UI/Enemy/EnemyHPBarWidget.h"
 
-AMurdock::AMurdock()
+AMinions::AMinions()
 {
 	m_Info.MaxHP = 200.f;
 	m_Info.CurHP = 200.f;
 
-	ConstructorHelpers::FObjectFinder<UBlackboardData> Blackboard(TEXT("BlackboardData'/Game/BlueprintClass/Enemy/Murdock/BB_Murdock.BB_Murdock'"));
+	ConstructorHelpers::FObjectFinder<UBlackboardData> Blackboard(TEXT("BlackboardData'/Game/BlueprintClass/Enemy/Minions/BB_Minions.BB_Minions'"));
 	if (Blackboard.Succeeded())
 		m_Blackboard = Blackboard.Object;
 
-	ConstructorHelpers::FObjectFinder<UBehaviorTree> BehaviorTree(TEXT("BehaviorTree'/Game/BlueprintClass/Enemy/Murdock/BT_Murdock.BT_Murdock'"));
+	ConstructorHelpers::FObjectFinder<UBehaviorTree> BehaviorTree(TEXT("BehaviorTree'/Game/BlueprintClass/Enemy/Minions/BT_Minions.BT_Minions'"));
 	if (BehaviorTree.Succeeded())
 		m_BehaviorTree = BehaviorTree.Object;
-		
-	ConstructorHelpers::FObjectFinder<USkeletalMesh> EnemyMesh(TEXT("SkeletalMesh'/Game/ParagonMurdock/Characters/Heroes/Murdock/Meshes/Murdock.Murdock'"));
+
+	ConstructorHelpers::FObjectFinder<USkeletalMesh> EnemyMesh(TEXT("SkeletalMesh'/Game/ParagonMinions/Characters/Minions/Down_Minions/Meshes/Minion_Lane_Melee_Core_Dawn.Minion_Lane_Melee_Core_Dawn'"));
 	if (EnemyMesh.Succeeded())
 		GetMesh()->SetSkeletalMesh(EnemyMesh.Object);
 
-	ConstructorHelpers::FClassFinder<UAnimInstance> AnimBlueprint(TEXT("AnimBlueprint'/Game/BlueprintClass/Enemy/Murdock/ABP_Murdock.ABP_Murdock_C'"));
+	ConstructorHelpers::FClassFinder<UAnimInstance> AnimBlueprint(TEXT("AnimBlueprint'/Game/BlueprintClass/Enemy/Minions/ABP_Minions.ABP_Minions_C'"));
 	if (AnimBlueprint.Succeeded())
 		GetMesh()->SetAnimInstanceClass(AnimBlueprint.Class);
 
-	ConstructorHelpers::FObjectFinder<UDataTable> MontageTable(TEXT("DataTable'/Game/BlueprintClass/Enemy/Murdock/DataTable/MurdockMontageTable.MurdockMontageTable'"));
+	ConstructorHelpers::FObjectFinder<UDataTable> MontageTable(TEXT("DataTable'/Game/BlueprintClass/Enemy/Minions/DataTable/MinionsMontageTable.MinionsMontageTable'"));
 	if (MontageTable.Succeeded())
 		m_MontageTable = MontageTable.Object;
 
-	ConstructorHelpers::FClassFinder<AProjectile> AttackProjectile(TEXT("Blueprint'/Game/BlueprintClass/Enemy/Murdock/BP_Bullet.BP_Bullet_C'"));
-	if (AttackProjectile.Succeeded())
-		m_AttackProjectile = AttackProjectile.Class;
+	ConstructorHelpers::FObjectFinder<UDataTable> AttackInfoTable(TEXT("DataTable'/Game/BlueprintClass/Enemy/Minions/DataTable/MinionsAttackInfoTable.MinionsAttackInfoTable'"));
+	if (AttackInfoTable.Succeeded())
+		m_AttackInfoTable = AttackInfoTable.Object;
+
+	m_AttackCooltime[0] = 2.f;
+	m_CooltimeWaitDistance = 200.;
 }
 
-void AMurdock::BeginPlay()
+void AMinions::BeginPlay()
 {
 	Super::BeginPlay();
+
+	FVector Pos = GetActorLocation();
+	Pos.Z += 90.f;
+	SetActorLocation(Pos);
+
+	GetCharacterMovement()->SetMovementMode(MOVE_Falling);
 }
 
-void AMurdock::Tick(float DeltaTime)
+void AMinions::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	SpawnUpdate();
 }
 
-void AMurdock::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
+void AMinions::SpawnUpdate()
+{
+	if (m_State != EENEMY_STATE::SPAWN)
+		return;
+
+	if (GetCharacterMovement()->IsMovingOnGround())
+	{
+		ChangeState(EENEMY_STATE::SPAWN_LANDING);
+	}
+}
+
+void AMinions::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
 {
 	if (m_Fly == false && m_Info.CurHP <= 0.f)
 		return;
@@ -117,9 +139,12 @@ void AMurdock::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
 	}
 }
 
-bool AMurdock::AttackCheck()
+bool AMinions::AttackCheck()
 {
 	if (IsDamage() || m_State == EENEMY_STATE::DEATH)
+		return false;
+
+	if (0.f < m_RemainAttackCooltime[0])
 		return false;
 
 	AMyPlayer* Player = Cast<AMyPlayer>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetPawn());
@@ -127,8 +152,10 @@ bool AMurdock::AttackCheck()
 	PlayerPos.Z = GetActorLocation().Z;
 	float Distance = FVector::Distance(GetActorLocation(), PlayerPos);
 
-	if (Distance <= 1500.f)
+	if (Distance <= 200.f)
 	{
+		m_RemainAttackCooltime[0] = m_AttackCooltime[0];
+
 		m_Attack = true;
 		LookToPlayer();
 		ChangeState(EENEMY_STATE::ATTACK1);
@@ -136,14 +163,4 @@ bool AMurdock::AttackCheck()
 	}
 
 	return false;
-}
-
-void AMurdock::Fire()
-{
-	AMyPlayer* Player = Cast<AMyPlayer>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetPawn());
-
-	FVector Pos = GetActorLocation();
-	FVector Velocity = (Player->GetActorLocation() - Pos).GetSafeNormal();
-
-	SpawnProjectile(m_AttackProjectile, Pos, GetRotationToPlayer(), Velocity);
 }

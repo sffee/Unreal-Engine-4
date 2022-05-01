@@ -19,9 +19,6 @@ AMyPlayer::AMyPlayer()
 	, m_PressAKey(false)
 	, m_PressDKey(false)
 	, m_PressSpecialAttackKey(false)
-	, m_IsSlowTime(false)
-	, m_CurSlowPower(0.f)
-	, m_CurSlowTime(0.f)
 	, m_PressLockOn(false)
 	, m_Jump(false)
 	, m_JumpSecond(false)
@@ -93,7 +90,6 @@ void AMyPlayer::Tick(float DeltaTime)
 	CheckRunAnimation();
 	AttackMove();
 	DashAttackUpdate(DeltaTime);
-	SlowTimeCheck();
 	LockOnCameraUpdate(DeltaTime);
 	LoopAttackUpdate();
 }
@@ -482,29 +478,6 @@ bool AMyPlayer::HitProcess(const FHitResult& _HitResult, const FAttackInfo* _Att
 	return Return;
 }
 
-void AMyPlayer::SlowTime(float _Power, float _Time)
-{
-	check(_Power != 0.f);
-
-	m_IsSlowTime = true;
-	m_CurSlowTime = _Time;
-	m_CurSlowPower = _Power;
-	GetWorldSettings()->SetTimeDilation(_Power);
-}
-
-void AMyPlayer::SlowTimeCheck()
-{
-	if (m_IsSlowTime == false)
-		return;
-
-	m_CurSlowTime -= 1.f / m_CurSlowPower * GetWorld()->GetDeltaSeconds();
-	if (m_CurSlowTime <= 0.f)
-	{
-		m_IsSlowTime = false;
-		GetWorldSettings()->SetTimeDilation(1.f);
-	}
-}
-
 void AMyPlayer::AttackMoveSpeedSetting(EPLAYER_STATE _State)
 {
 	FName RowName = m_MontageMap.FindRef(_State);
@@ -858,6 +831,29 @@ void AMyPlayer::OnBeginOverlap(UPrimitiveComponent* _PrimitiveComponent, AActor*
 
 		ChangeState(EPLAYER_STATE::DAMAGE, true);
 	}
+}
+
+void AMyPlayer::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
+{
+	Super::Damage(_Actor, _AttackInfo);
+
+	m_Info.CurHP -= _AttackInfo->Damage;
+
+	FRotator Rotator = _Actor->GetActorRotation();
+	Rotator.Roll = 0.f;
+	Rotator.Pitch = 0.f;
+	Rotator.Yaw += 180.f;
+	SetActorRotation(Rotator);
+
+	FVector HitVector = _Actor->GetActorForwardVector();
+	HitVector.X *= _AttackInfo->KnockBackPowerXY;
+	HitVector.Y *= _AttackInfo->KnockBackPowerXY;
+	HitVector.Z = _AttackInfo->KnockBackPowerZ;
+
+	GetCharacterMovement()->Velocity = FVector::ZeroVector;
+
+	LaunchCharacter(HitVector, false, false);
+	ChangeState(EPLAYER_STATE::DAMAGE, true);
 }
 
 bool AMyPlayer::IsPressMoveKey()

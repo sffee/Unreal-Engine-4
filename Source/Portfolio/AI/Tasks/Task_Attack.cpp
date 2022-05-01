@@ -29,10 +29,10 @@ EBTNodeResult::Type UTask_Attack::ExecuteTask(UBehaviorTreeComponent& OwnerComp,
 		return EBTNodeResult::Failed;
 
 	EENEMY_STATE State = Enemy->GetState();
-	if (State == EENEMY_STATE::SPAWN || State == EENEMY_STATE::DEATH)
+	if (State == EENEMY_STATE::SPAWN || State == EENEMY_STATE::SPAWN_LANDING || State == EENEMY_STATE::DEATH)
 		return EBTNodeResult::Failed;
 
-	if (Enemy->Attack())
+	if (Enemy->AttackCheck())
 	{
 		Controller->StopMovement();
 		return EBTNodeResult::Succeeded;

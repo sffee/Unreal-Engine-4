@@ -30,6 +30,9 @@ public:
 	void AnimNotify_Idle();
 
 	UFUNCTION()
+	void AnimNotify_Attack();
+
+	UFUNCTION()
 	void AnimNotify_Fire();
 
 	UFUNCTION()
