@@ -18,6 +18,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	UWidgetComponent* m_WidgetComponent;
 
+	UEnemyAnimInstance* m_AnimInst;
+
 private:
 	void KnockBackFlyLandCheck();
 

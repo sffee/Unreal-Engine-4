@@ -43,8 +43,6 @@ protected:
 	UDataTable* m_MontageTable;
 	TMap<EENEMY_STATE, FName> m_MontageMap;
 
-	UEnemyAnimInstance* m_AnimInst;
-
 	bool m_Dissolve;
 	float m_DissolveProgress;
 

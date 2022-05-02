@@ -17,6 +17,8 @@ void ANormalEnemyBase::SetHP(float _Ratio)
 void ANormalEnemyBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	m_AnimInst = Cast<UEnemyAnimInstance>(GetMesh()->GetAnimInstance());
 }
 
 void ANormalEnemyBase::Tick(float DeltaTime)

@@ -31,8 +31,6 @@ void AEnemyBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	m_AnimInst = Cast<UEnemyAnimInstance>(GetMesh()->GetAnimInstance());
-
 	FString Str;
 	TArray<FEnemyMontageInfo*> AllRows;
 	m_MontageTable->GetAllRows<FEnemyMontageInfo>(Str, AllRows);
