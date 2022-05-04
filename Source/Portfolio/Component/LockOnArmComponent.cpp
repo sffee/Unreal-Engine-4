@@ -1,5 +1,6 @@
 #include "LockOnArmComponent.h"
 #include "TargetComponent.h"
+#include "../Player/MyPlayer.h"
 
 ULockOnArmComponent::ULockOnArmComponent()
 {
@@ -19,11 +20,16 @@ ULockOnArmComponent::ULockOnArmComponent()
 	CameraRotationLagSpeed = 2.f;
 	CameraLagMaxDistance = 100.f;
 	m_FindDistance = 2000.f;
+
+	m_LengthMin = 500.f;
+	m_LengthMax = 1000.f;
 }
 
 void ULockOnArmComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	LengthUpdate();
 
 	if (m_Target == nullptr)
 		return;
@@ -35,6 +41,29 @@ void ULockOnArmComponent::TickComponent(float DeltaTime, enum ELevelTick TickTyp
 			LockOff();
 		else
 			LockOn();
+	}
+}
+
+void ULockOnArmComponent::LengthUpdate()
+{
+	FHitResult result;
+	FCollisionQueryParams param;
+	
+	FVector Pos = GetOwner()->GetActorLocation();
+	FVector End = Pos;
+	End.Z -= 10000.f;
+
+	bool Hit = GetWorld()->LineTraceSingleByChannel(result, Pos, End, ECC_GameTraceChannel9, param);
+
+	if (Hit)
+	{
+		float Distance = FVector::Distance(Pos, result.ImpactPoint);
+		Distance -= 90.f;
+
+		Pos.Z -= 300.f;
+		float Ratio = FMath::Max(0.f, FMath::Min(Pos.Z / 400.f, 1.f));
+
+		TargetArmLength = (m_LengthMax - m_LengthMin) * Ratio + m_LengthMin;
 	}
 }
 

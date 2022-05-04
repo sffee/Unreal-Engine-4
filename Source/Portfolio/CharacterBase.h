@@ -26,6 +26,9 @@ protected:
 protected:
 	TArray<USkeletalMeshComponent*> m_EtcMesh;
 
+private:
+	bool m_AttackMove;
+
 protected:
 	bool m_HitEffect;
 	float m_HitEffectTimer;
@@ -47,6 +50,14 @@ public:
 		m_Damage = _Set;
 	}
 
+	void SetAttackMove(bool _Set)
+	{
+		m_AttackMove = _Set;
+
+		if (_Set == false)
+			GetMovementComponent()->StopMovementImmediately();
+	}
+
 public:
 	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo);
 	void SpawnProjectile(TSubclassOf<AProjectile> _Particle, const FVector& _Position, const FRotator& _Rotation, const FVector& _Velocity);
@@ -59,6 +70,7 @@ public:
 
 private:
 	void SlowTimeCheck();
+	void AttackMove();
 
 public:
 	virtual void BeginPlay() override;

@@ -33,9 +33,6 @@ AMinions::AMinions()
 	ConstructorHelpers::FObjectFinder<UDataTable> AttackInfoTable(TEXT("DataTable'/Game/BlueprintClass/Enemy/Minions/DataTable/MinionsAttackInfoTable.MinionsAttackInfoTable'"));
 	if (AttackInfoTable.Succeeded())
 		m_AttackInfoTable = AttackInfoTable.Object;
-
-	m_AttackCooltime[0] = 2.f;
-	m_CooltimeWaitDistance = 200.;
 }
 
 void AMinions::BeginPlay()
@@ -144,9 +141,6 @@ bool AMinions::AttackCheck()
 	if (IsDamage() || m_State == EENEMY_STATE::DEATH)
 		return false;
 
-	if (0.f < m_RemainAttackCooltime[0])
-		return false;
-
 	AMyPlayer* Player = Cast<AMyPlayer>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetPawn());
 	FVector PlayerPos = Player->GetActorLocation();
 	PlayerPos.Z = GetActorLocation().Z;
@@ -154,8 +148,6 @@ bool AMinions::AttackCheck()
 
 	if (Distance <= 200.f)
 	{
-		m_RemainAttackCooltime[0] = m_AttackCooltime[0];
-
 		m_Attack = true;
 		LookToPlayer();
 		ChangeState(EENEMY_STATE::ATTACK1);

@@ -1,6 +1,13 @@
 #include "Kwang.h"
 
+#include "../Player/MyPlayer.h"
+#include "../Component/TargetComponent.h"
+
+#include <BehaviorTree/BlackboardComponent.h>
+#include "EnemyAIController.h"
+
 AKwang::AKwang()
+	: m_WaitTime(0.f)
 {
 	m_Info.MaxHP = 2000.f;
 	m_Info.CurHP = 2000.f;
@@ -28,26 +35,81 @@ AKwang::AKwang()
 	ConstructorHelpers::FObjectFinder<UDataTable> AttackInfoTable(TEXT("DataTable'/Game/BlueprintClass/Enemy/Kwang/DataTable/KwangAttackInfoTable.KwangAttackInfoTable'"));
 	if (AttackInfoTable.Succeeded())
 		m_AttackInfoTable = AttackInfoTable.Object;
-}
 
-void AKwang::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
-{
-	Super::Damage(_Actor, _AttackInfo);
-}
+	ConstructorHelpers::FObjectFinder<UDataTable> AttackCooltime(TEXT("DataTable'/Game/BlueprintClass/Enemy/Kwang/DataTable/KwangAttackCooltime.KwangAttackCooltime'"));
+	if (AttackCooltime.Succeeded())
+		m_AttackCooltimeTable = AttackCooltime.Object;
 
-bool AKwang::AttackCheck()
-{
-	return false;
+	ConstructorHelpers::FObjectFinder<UDataTable> AttackMoveTable(TEXT("DataTable'/Game/BlueprintClass/Enemy/Kwang/DataTable/KwangAttackMoveTable.KwangAttackMoveTable'"));
+	if (AttackMoveTable.Succeeded())
+		m_AttackMoveTable = AttackMoveTable.Object;
 }
 
 void AKwang::BeginPlay()
 {
 	Super::BeginPlay();
 
-	m_AnimInst = Cast<UBossAnimInstance>(GetMesh()->GetAnimInstance());
+	UBlackboardComponent* BB = Cast<AEnemyAIController>(Controller)->GetBlackboardComponent();
+	BB->SetValueAsFloat(TEXT("Attack1Cooltime"), 0.f);
+	BB->SetValueAsFloat(TEXT("Attack2Cooltime"), 0.f);
+	BB->SetValueAsBool(TEXT("Attacking"), false);
 }
 
 void AKwang::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	StateUpdate();
+	Attack4Update();
+}
+
+void AKwang::StateUpdate()
+{
+	if (m_State == EENEMY_STATE::ATTACK4)
+	{
+		FName RowName = m_MontageMap.FindRef(m_State);
+		FEnemyMontageInfo* MontageInfo = m_MontageTable->FindRow<FEnemyMontageInfo>(RowName, TEXT(""));
+		if (MontageInfo != nullptr)
+		{
+			FName Section = m_AnimInst->Montage_GetCurrentSection(MontageInfo->Montage);
+			if (Section == "Attack4_Start" || Section == "Attack4_Charge")
+				LookToPlayer();
+		}
+	}
+}
+
+void AKwang::Attack4Update()
+{
+	if (m_State == EENEMY_STATE::ATTACK4)
+	{
+		FName RowName = m_MontageMap.FindRef(m_State);
+		FEnemyMontageInfo* MontageInfo = m_MontageTable->FindRow<FEnemyMontageInfo>(RowName, TEXT(""));
+		if (MontageInfo != nullptr)
+		{
+			FName Section = m_AnimInst->Montage_GetCurrentSection(MontageInfo->Montage);
+			if (Section == "Attack4_Dash")
+			{
+				FVector vPos = GetActorLocation() + (GetActorForwardVector() * 200.f);
+
+				TArray<FHitResult> arrHit;
+				FCollisionQueryParams param(NAME_None, false, this);
+
+				GetWorld()->SweepMultiByChannel(arrHit, vPos, vPos, FQuat::Identity
+					, ECC_GameTraceChannel8
+					, FCollisionShape::MakeSphere(100.f), param);
+
+				if (arrHit.Num())
+				{
+					GetMovementComponent()->StopMovementImmediately();
+					//GetCharacterMovement()->Velocity = FVector::ZeroVector;
+					ChangeState(EENEMY_STATE::ATTACK5);
+				}
+			}
+		}
+	}
+}
+
+void AKwang::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
+{
+	Super::Damage(_Actor, _AttackInfo);
 }

@@ -20,25 +20,30 @@ EBTNodeResult::Type UTask_Attack::ExecuteTask(UBehaviorTreeComponent& OwnerComp,
 	if (Controller == nullptr)
 		return EBTNodeResult::Failed;
 
-	AMyPlayer* Player = Cast<AMyPlayer>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetPawn());
-	if (Player == nullptr)
-		return EBTNodeResult::Failed;
-
 	AEnemyBase* Enemy = Cast<AEnemyBase>(Controller->GetPawn());
 	if (Enemy == nullptr)
 		return EBTNodeResult::Failed;
 
-	EENEMY_STATE State = Enemy->GetState();
-	if (State == EENEMY_STATE::SPAWN || State == EENEMY_STATE::SPAWN_LANDING || State == EENEMY_STATE::DEATH)
-		return EBTNodeResult::Failed;
+	UBlackboardComponent* BB = Controller->GetBlackboardComponent();
+	BB->SetValueAsBool(TEXT("Attacking"), true);
 
-	if (Enemy->AttackCheck())
-	{
-		Controller->StopMovement();
-		return EBTNodeResult::Succeeded;
-	}
+	EENEMY_STATE NextState = (EENEMY_STATE)BB->GetValueAsEnum(TEXT("NextState"));
+	float Cooltime = Enemy->GetCooltime(NextState);
 
-	return EBTNodeResult::Failed;
+	Enemy->LookToPlayer();
+
+	if (NextState == EENEMY_STATE::ATTACK1)
+		BB->SetValueAsFloat(TEXT("Attack1Cooltime"), Cooltime);
+	else if (NextState == EENEMY_STATE::ATTACK2)
+		BB->SetValueAsFloat(TEXT("Attack2Cooltime"), Cooltime);
+	else if (NextState == EENEMY_STATE::ATTACK3)
+		BB->SetValueAsFloat(TEXT("Attack3Cooltime"), Cooltime);
+	else if (NextState == EENEMY_STATE::ATTACK4)
+		BB->SetValueAsFloat(TEXT("Attack4Cooltime"), Cooltime);
+
+	Enemy->ChangeState(NextState);
+
+	return EBTNodeResult::Succeeded;
 }
 
 void UTask_Attack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)

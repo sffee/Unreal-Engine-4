@@ -43,14 +43,16 @@ protected:
 	UDataTable* m_MontageTable;
 	TMap<EENEMY_STATE, FName> m_MontageMap;
 
+	UDataTable* m_AttackCooltimeTable;
+	TMap<EENEMY_STATE, FName> m_AttackCooltimeMap;
+
+	UEnemyAnimInstance* m_AnimInst;
+
 	bool m_Dissolve;
 	float m_DissolveProgress;
 
 	bool m_Attack;
 	bool m_Fly;
-
-	float m_AttackCooltime[6];
-	float m_RemainAttackCooltime[6];
 
 protected:
 	bool m_LoopAttackCheck;
@@ -89,6 +91,8 @@ public:
 		return m_CooltimeWaitDistance;
 	}
 
+	float GetCooltime(EENEMY_STATE _State);
+
 public:
 	AEnemyBase();
 
@@ -118,14 +122,19 @@ public:
 
 	virtual void Fire() {};
 
-protected:
+private:
+	void InitDataTableMap();
+
+public:
 	void LookToPlayer();
+	void AttackMoveSpeedSetting(EENEMY_STATE _State);
+
+protected:
 	FRotator GetRotationToPlayer();
 
 private:
 	void DissolveUpdate(float _DeltaTime);
 	bool HitProcess(const FHitResult& _HitResult, const FAttackInfo* _AttackInfo);
-	void CooltimeUpdate(float _DeltaTime);
 
 public:
 	virtual void BeginPlay() override;

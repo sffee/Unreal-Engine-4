@@ -34,7 +34,6 @@ private:
 	UPlayerAnimInstance* m_AnimInst;
 
 	bool m_Attacking;
-	bool m_AttackMove;
 	bool m_AttackCancleable;
 	bool m_Moveable;
 	
@@ -69,11 +68,6 @@ public:
 	EPLAYER_STATE GetState()
 	{
 		return m_State;
-	}
-
-	void SetAttackMove(bool _Set)
-	{
-		m_AttackMove = _Set;
 	}
 
 	void SetAttackCancleable(bool _Set)
@@ -130,7 +124,6 @@ private:
 	void LoopAttackUpdate();
 
 private:
-	void AttackMove();
 	void LookToLockOnTarget();
 
 private:

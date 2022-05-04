@@ -24,6 +24,12 @@ class PORTFOLIO_API ULockOnArmComponent : public USpringArmComponent
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lock On", meta = (AllowPrivateAccess = "true"))
 	float m_LockOffPressTime;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lock On", meta = (AllowPrivateAccess = "true"))
+	float m_LengthMin;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lock On", meta = (AllowPrivateAccess = "true"))
+	float m_LengthMax;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UTargetComponent* m_Target;
 
@@ -66,6 +72,9 @@ public:
 public:
 	void LockOn();
 	void LockOff();
+
+private:
+	void LengthUpdate();
 
 private:
 	TArray<UTargetComponent*> SearchTarget();

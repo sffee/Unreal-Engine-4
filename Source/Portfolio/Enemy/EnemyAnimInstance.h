@@ -46,4 +46,13 @@ public:
 
 	UFUNCTION()
 	void AnimNotify_DamageAirEnd();
+
+	UFUNCTION()
+	void AnimNotify_DecreaseVelocity();
+
+	UFUNCTION()
+	void AnimNotify_MoveStart();
+
+	UFUNCTION()
+	void AnimNotify_MoveStop();
 };

@@ -1,7 +1,8 @@
 #include "CharacterBase.h"
 
 ACharacterBase::ACharacterBase()
-	: m_HitEffect(false)
+	: m_AttackMove(false)
+	, m_HitEffect(false)
 	, m_Damage(false)
 	, m_IsSlowTime(false)
 	, m_CurSlowPower(0.f)
@@ -23,12 +24,12 @@ void ACharacterBase::Tick(float DeltaTime)
 
 	HitEffectUpdate(DeltaTime);
 	SlowTimeCheck();
+	AttackMove();
 }
 
 void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 }
 
 void ACharacterBase::SpawnProjectile(TSubclassOf<AProjectile> _Particle, const FVector& _Position, const FRotator& _Rotation, const FVector& _Velocity)
@@ -98,4 +99,12 @@ void ACharacterBase::SlowTimeCheck()
 		m_IsSlowTime = false;
 		GetWorldSettings()->SetTimeDilation(1.f);
 	}
+}
+
+void ACharacterBase::AttackMove()
+{
+	if (m_AttackMove == false)
+		return;
+
+	AddMovementInput(GetActorForwardVector(), 1.f);
 }

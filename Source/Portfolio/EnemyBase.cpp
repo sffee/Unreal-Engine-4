@@ -1,7 +1,9 @@
 #include "EnemyBase.h"
 
-#include "Trigger/EnemySpawnTrigger.h"
+#include <BehaviorTree/BlackboardComponent.h>
 
+#include "Engine/SkeletalMeshSocket.h"
+#include "Trigger/EnemySpawnTrigger.h"
 #include "Manager/Effectmanager.h"
 
 #include "Enemy/EnemyAIController.h"
@@ -31,17 +33,37 @@ void AEnemyBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FString Str;
-	TArray<FEnemyMontageInfo*> AllRows;
-	m_MontageTable->GetAllRows<FEnemyMontageInfo>(Str, AllRows);
+	m_AnimInst = Cast<UEnemyAnimInstance>(GetMesh()->GetAnimInstance());
 
-	TArray<FName> AllRowNames = m_MontageTable->GetRowNames();;
-
-	for (int i = 0; i < AllRows.Num(); i++)
-		m_MontageMap.Add(AllRows[i]->State, AllRowNames[i]);
+	InitDataTableMap();
 
 	PlayMontage(m_State);
 	LookToPlayer();
+}
+
+void AEnemyBase::InitDataTableMap()
+{
+	FString Str;
+
+	{
+		TArray<FEnemyMontageInfo*> AllRows;
+		m_MontageTable->GetAllRows<FEnemyMontageInfo>(Str, AllRows);
+
+		TArray<FName> AllRowNames = m_MontageTable->GetRowNames();
+
+		for (int i = 0; i < AllRows.Num(); i++)
+			m_MontageMap.Add(AllRows[i]->State, AllRowNames[i]);
+	}
+
+	{
+		TArray<FEnemyAttackCooltime*> AllRows;
+		m_AttackCooltimeTable->GetAllRows<FEnemyAttackCooltime>(Str, AllRows);
+
+		TArray<FName> AllRowNames = m_AttackCooltimeTable->GetRowNames();
+
+		for (int i = 0; i < AllRows.Num(); i++)
+			m_AttackCooltimeMap.Add(AllRows[i]->State, AllRowNames[i]);
+	}
 }
 
 void AEnemyBase::PlayMontage(EENEMY_STATE _State)
@@ -68,6 +90,7 @@ void AEnemyBase::ChangeState(EENEMY_STATE _NextState, bool _Ignore)
 	switch (m_State)
 	{
 	case EENEMY_STATE::IDLE:
+		Cast<AEnemyAIController>(Controller)->GetBlackboardComponent()->SetValueAsBool(TEXT("Attacking"), false);
 	case EENEMY_STATE::RUN:
 		m_Damage = false;
 		m_Attack = false;
@@ -92,17 +115,6 @@ void AEnemyBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	DissolveUpdate(DeltaTime);
-	CooltimeUpdate(DeltaTime);
-}
-
-void AEnemyBase::CooltimeUpdate(float _DeltaTime)
-{
-	for (int i = 0; i < 6; i++)
-	{
-		m_RemainAttackCooltime[i] -= _DeltaTime;
-		if (m_RemainAttackCooltime[i] < 0.f)
-			m_RemainAttackCooltime[i] = 0.f;
-	}
 }
 
 void AEnemyBase::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
@@ -223,11 +235,11 @@ bool AEnemyBase::HitProcess(const FHitResult& _HitResult, const FAttackInfo* _At
 		AMyPlayer* Player = Cast<AMyPlayer>(_HitResult.Actor);
 		if (Player != nullptr)
 		{
-			float Radius = Player->GetCapsuleComponent()->GetScaledCapsuleRadius() / 2.f;
-			float Height = Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() / 2.f;
-			float XRandom = FMath::RandRange(-Radius, Radius);
+			float Radius = Player->GetCapsuleComponent()->GetScaledCapsuleRadius() / 3.f;
+			float Height = Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() / 3.f;
+			float YRandom = FMath::RandRange(-Radius, Radius);
 			float ZRandom = FMath::RandRange(-Height, Height);
-			FTransform Trans(Player->GetMesh()->GetBoneLocation(TEXT("spine_01")) + FVector(XRandom, 0.f, ZRandom));
+			FTransform Trans(Player->GetMesh()->GetSocketLocation(TEXT("HitEffect")) + FVector(0.f, YRandom, ZRandom));
 
 			UObject* Object = ULevelStreamManager::GetInst(GetWorld())->FindAsset(FName(_AttackInfo->HitEffect->GetPathName()));
 			UEffectManager::GetInst(GetWorld())->CreateEffect(Object, Trans, GetLevel(), _AttackInfo->HitEffectScale);
@@ -241,4 +253,37 @@ bool AEnemyBase::HitProcess(const FHitResult& _HitResult, const FAttackInfo* _At
 	}
 
 	return Return;
+}
+
+float AEnemyBase::GetCooltime(EENEMY_STATE _State)
+{
+	FName RowName = m_AttackCooltimeMap.FindRef(_State);
+
+	FEnemyAttackCooltime* CooltimeInfo = m_AttackCooltimeTable->FindRow<FEnemyAttackCooltime>(RowName, TEXT(""));
+	if (CooltimeInfo != nullptr)
+	{
+		return CooltimeInfo->Cooltime;
+	}
+
+	return 9999.f;
+}
+
+void AEnemyBase::AttackMoveSpeedSetting(EENEMY_STATE _State)
+{
+	FName RowName = m_MontageMap.FindRef(_State);
+
+	FEnemyMontageInfo* MontageInfo = m_MontageTable->FindRow<FEnemyMontageInfo>(RowName, TEXT(""));
+	if (MontageInfo != nullptr)
+	{
+		FName Section = m_AnimInst->Montage_GetCurrentSection(MontageInfo->Montage);
+		FAttackMoveInfo* AttackMoveInfo = m_AttackMoveTable->FindRow<FAttackMoveInfo>(Section, TEXT(""));
+		if (AttackMoveInfo != nullptr)
+		{
+			GetMovementComponent()->StopMovementImmediately();
+
+			GetCharacterMovement()->Velocity = GetActorForwardVector() * AttackMoveInfo->StartSpeed;
+			GetCharacterMovement()->MaxWalkSpeed = AttackMoveInfo->MaxWalkSpeed;
+			GetCharacterMovement()->MaxAcceleration = AttackMoveInfo->MaxAcceleration;
+		}
+	}
 }

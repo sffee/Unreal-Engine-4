@@ -86,3 +86,31 @@ void UEnemyAnimInstance::AnimNotify_DamageAirEnd()
 		Enemy->ChangeState(EENEMY_STATE::DAMAGE_KNOCKBACK_FLY);
 	}
 }
+
+void UEnemyAnimInstance::AnimNotify_DecreaseVelocity()
+{
+	AEnemyBase* Enemy = Cast<AEnemyBase>(TryGetPawnOwner());
+	if (Enemy != nullptr)
+	{
+		Enemy->GetCharacterMovement()->Velocity /= 1.6f;
+	}
+}
+
+void UEnemyAnimInstance::AnimNotify_MoveStart()
+{
+	AEnemyBase* Enemy = Cast<AEnemyBase>(TryGetPawnOwner());
+	if (Enemy != nullptr)
+	{
+		Enemy->SetAttackMove(true);
+		Enemy->AttackMoveSpeedSetting(m_State);
+	}
+}
+
+void UEnemyAnimInstance::AnimNotify_MoveStop()
+{
+	AEnemyBase* Enemy = Cast<AEnemyBase>(TryGetPawnOwner());
+	if (Enemy != nullptr)
+	{
+		Enemy->SetAttackMove(false);
+	}
+}

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "BossAnimInstance.h"
-
 #include "CoreMinimal.h"
 #include "../EnemyBase.h"
 #include "Kwang.generated.h"
@@ -12,14 +10,17 @@ class PORTFOLIO_API AKwang : public AEnemyBase
 	GENERATED_BODY()
 	
 private:
-	UBossAnimInstance* m_AnimInst;
+	float m_WaitTime;
 
 public:
 	AKwang();
 
+private:
+	void StateUpdate();
+	void Attack4Update();
+
 public:
 	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo) override;
-	virtual bool AttackCheck() override;
 
 public:
 	virtual void BeginPlay() override;

@@ -11,7 +11,6 @@ AMyPlayer::AMyPlayer()
 	: m_State(EPLAYER_STATE::SWORD_IDLE_L)
 	, m_Moveable(true)
 	, m_Attacking(false)
-	, m_AttackMove(false)
 	, m_AttackCancleable(true)
 	, m_ComboBCount(0)
 	, m_PressWKey(false)
@@ -73,7 +72,6 @@ void AMyPlayer::BeginPlay()
 	CameraManager->ViewPitchMin = -30.f;
 
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AMyPlayer::OnBeginOverlap);
-	//GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AMyPlayer::OnHit);
 
 	m_EtcMesh.Add(Cast<USkeletalMeshComponent>(GetDefaultSubobjectByName(TEXT("Wing"))));
 	m_EtcMesh.Add(Cast<USkeletalMeshComponent>(GetDefaultSubobjectByName(TEXT("Sword"))));
@@ -88,7 +86,6 @@ void AMyPlayer::Tick(float DeltaTime)
 	HUDUpdate();
 	JumpUpdate();
 	CheckRunAnimation();
-	AttackMove();
 	DashAttackUpdate(DeltaTime);
 	LockOnCameraUpdate(DeltaTime);
 	LoopAttackUpdate();
@@ -129,16 +126,25 @@ void AMyPlayer::HUDUpdate()
 
 void AMyPlayer::JumpUpdate()
 {
-	if (m_Jump == true && GetMovementComponent()->IsMovingOnGround())
+	if (m_Jump == true)
 	{
-		if (m_State == EPLAYER_STATE::JUMP_LOOP)
+		if (GetMovementComponent()->IsMovingOnGround())
 		{
-			ChangeState(EPLAYER_STATE::JUMP_LANDING);
+			if (m_State == EPLAYER_STATE::JUMP_LOOP)
+			{
+				ChangeState(EPLAYER_STATE::JUMP_LANDING);
+			}
+			else if (m_State == EPLAYER_STATE::SWORD_JUMP_DOWNATTACK_LOOP)
+			{
+				ChangeState(EPLAYER_STATE::SWORD_JUMP_DOWNATTACK_END);
+			}
 		}
-		else if (m_State == EPLAYER_STATE::SWORD_JUMP_DOWNATTACK_LOOP)
+		else
 		{
-			ChangeState(EPLAYER_STATE::SWORD_JUMP_DOWNATTACK_END);
+			if (m_State == EPLAYER_STATE::SWORD_JUMP_DOWNATTACK_LOOP)
+				GetCharacterMovement()->Velocity = FVector(0.f, 0.f, -2500.f);
 		}
+
 	}
 }
 
@@ -165,7 +171,7 @@ void AMyPlayer::DashAttackUpdate(float _DeltaTime)
 	if (m_State == EPLAYER_STATE::SWORD_DASHATTACK_RUN_LOOP)
 	{
 		m_DashAttackTimer += _DeltaTime;
-		if (0.7f <= m_DashAttackTimer)
+		if (0.5f <= m_DashAttackTimer)
 		{
 			ChangeState(EPLAYER_STATE::SWORD_DASHATTACK_FINISH_START);
 		}
@@ -203,14 +209,6 @@ void AMyPlayer::PlayMontage(EPLAYER_STATE _State)
 		GetCharacterMovement()->bUseSeparateBrakingFriction = MontageInfo->UseSeparateBrakingFriction;
 		GetCharacterMovement()->GravityScale = MontageInfo->Gravity;
 	}
-}
-
-void AMyPlayer::AttackMove()
-{
-	if (m_AttackMove == false)
-		return;
-
-	AddMovementInput(GetActorForwardVector(), 1.f);
 }
 
 void AMyPlayer::LookToLockOnTarget()
@@ -298,7 +296,7 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 	else
 	{
 		m_Attacking = false;
-		m_AttackMove = false;
+		SetAttackMove(false);
 		m_AttackCancleable = true;
 	}
 
@@ -319,7 +317,7 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 	case EPLAYER_STATE::SWORD_IDLE_R:
 		m_Attacking = false;
 		m_Moveable = true;
-		m_AttackMove = false;
+		SetAttackMove(false);
 		m_AttackCancleable = true;
 		SetDamage(false);
 		break;
@@ -328,7 +326,7 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 		GetCharacterMovement()->MaxAcceleration = 2048.f;
 		m_Attacking = false;
 		m_Moveable = true;
-		m_AttackMove = false;
+		SetAttackMove(false);
 		m_AttackCancleable = true;
 		SetDamage(false);
 		break;
@@ -460,9 +458,9 @@ bool AMyPlayer::HitProcess(const FHitResult& _HitResult, const FAttackInfo* _Att
 		{
 			float Radius = Enemy->GetCapsuleComponent()->GetScaledCapsuleRadius() / 2.f;
 			float Height = Enemy->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() / 2.f;
-			float XRandom = FMath::RandRange(-Radius, Radius);
+			float YRandom = FMath::RandRange(-Radius, Radius);
 			float ZRandom = FMath::RandRange(-Height, Height);
-			FTransform Trans(Enemy->GetMesh()->GetBoneLocation(TEXT("spine_01")) + FVector(XRandom, 0.f, ZRandom));
+			FTransform Trans(Enemy->GetMesh()->GetSocketLocation(TEXT("HitEffect")) + FVector(0.f, YRandom, ZRandom));
 
 			UObject* Object = ULevelStreamManager::GetInst(GetWorld())->FindAsset(FName(_AttackInfo->HitEffect->GetPathName()));
 			UEffectManager::GetInst(GetWorld())->CreateEffect(Object, Trans, GetLevel(), _AttackInfo->HitEffectScale);

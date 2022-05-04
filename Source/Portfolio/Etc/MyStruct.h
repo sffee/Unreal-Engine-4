@@ -129,6 +129,18 @@ struct FEnemyMontageInfo : public FTableRowBase
 };
 
 USTRUCT(Atomic, BlueprintType)
+struct FEnemyAttackCooltime : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	EENEMY_STATE State;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	float Cooltime;
+};
+
+USTRUCT(Atomic, BlueprintType)
 struct FAttackMoveInfo : public FTableRowBase
 {
 	GENERATED_BODY()

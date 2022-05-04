@@ -180,7 +180,6 @@ void UPlayerAnimInstance::AnimNotify_JumpDownAttackLoop()
 	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
 	if (Player != nullptr)
 	{
-		Player->GetCharacterMovement()->Velocity = FVector(0.f, 0.f, -2500.f);
 		Player->ChangeState(EPLAYER_STATE::SWORD_JUMP_DOWNATTACK_LOOP);
 	}
 }
