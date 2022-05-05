@@ -96,12 +96,10 @@ void AKwang::Attack4Update()
 
 				GetWorld()->SweepMultiByChannel(arrHit, vPos, vPos, FQuat::Identity
 					, ECC_GameTraceChannel8
-					, FCollisionShape::MakeSphere(100.f), param);
+					, FCollisionShape::MakeSphere(200.f), param);
 
 				if (arrHit.Num())
 				{
-					GetMovementComponent()->StopMovementImmediately();
-					//GetCharacterMovement()->Velocity = FVector::ZeroVector;
 					ChangeState(EENEMY_STATE::ATTACK5);
 				}
 			}

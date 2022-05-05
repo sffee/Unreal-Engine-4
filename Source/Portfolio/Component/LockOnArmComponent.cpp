@@ -3,6 +3,7 @@
 #include "../Player/MyPlayer.h"
 
 ULockOnArmComponent::ULockOnArmComponent()
+	: m_IsStart(false)
 {
 	SetRelativeLocation(FVector( 0.f, 0.f, 100.f ));
 	SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
@@ -25,8 +26,18 @@ ULockOnArmComponent::ULockOnArmComponent()
 	m_LengthMax = 1000.f;
 }
 
+void ULockOnArmComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	m_IsStart = true;
+}
+
 void ULockOnArmComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+	if (m_IsStart == false)
+		return;
+
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	LengthUpdate();
@@ -46,6 +57,22 @@ void ULockOnArmComponent::TickComponent(float DeltaTime, enum ELevelTick TickTyp
 
 void ULockOnArmComponent::LengthUpdate()
 {
+	AMyPlayer* Player = Cast<AMyPlayer>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetPawn());
+	if (Player == nullptr)
+		return;
+
+	EPLAYER_STATE State = Player->GetState();
+
+	float LengthMin = m_LengthMin;
+	float LengthMax = m_LengthMax;
+
+	float ZoomOutStart = 300.f;
+	if (State == EPLAYER_STATE::JUMP_DAMAGE_START || State == EPLAYER_STATE::JUMP_DAMAGE_LOOP)
+	{
+		ZoomOutStart = 500.f;
+		LengthMax = 1000.f;
+	}
+
 	FHitResult result;
 	FCollisionQueryParams param;
 	
@@ -60,10 +87,13 @@ void ULockOnArmComponent::LengthUpdate()
 		float Distance = FVector::Distance(Pos, result.ImpactPoint);
 		Distance -= 90.f;
 
-		Pos.Z -= 300.f;
-		float Ratio = FMath::Max(0.f, FMath::Min(Pos.Z / 400.f, 1.f));
+		Pos.Z -= ZoomOutStart;
+		float Ratio = FMath::Max(0.f, FMath::Min(Pos.Z / ZoomOutStart, 1.f));
 
-		TargetArmLength = (m_LengthMax - m_LengthMin) * Ratio + m_LengthMin;
+		TargetArmLength = (LengthMax - LengthMin) * Ratio + LengthMin;
+
+		FString a = FString::Printf(TEXT("%f %f %f %f"), LengthMin, LengthMax, Ratio, TargetArmLength);
+		LOG(Log, *a);
 	}
 }
 

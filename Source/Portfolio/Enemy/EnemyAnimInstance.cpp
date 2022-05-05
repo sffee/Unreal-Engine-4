@@ -111,6 +111,34 @@ void UEnemyAnimInstance::AnimNotify_MoveStop()
 	AEnemyBase* Enemy = Cast<AEnemyBase>(TryGetPawnOwner());
 	if (Enemy != nullptr)
 	{
+		Enemy->GetCharacterMovement()->Velocity = FVector::ZeroVector;
 		Enemy->SetAttackMove(false);
+	}
+}
+
+void UEnemyAnimInstance::AnimNotify_MoveSlowStop()
+{
+	AEnemyBase* Enemy = Cast<AEnemyBase>(TryGetPawnOwner());
+	if (Enemy != nullptr)
+	{
+		Enemy->SetAttackMove(false);
+	}
+}
+
+void UEnemyAnimInstance::AnimNotify_LookToPlayer()
+{
+	AEnemyBase* Enemy = Cast<AEnemyBase>(TryGetPawnOwner());
+	if (Enemy != nullptr)
+	{
+		Enemy->LookToPlayer();
+	}
+}
+
+void UEnemyAnimInstance::AnimNotify_Attack6()
+{
+	AEnemyBase* Enemy = Cast<AEnemyBase>(TryGetPawnOwner());
+	if (Enemy != nullptr)
+	{
+		Enemy->ChangeState(EENEMY_STATE::ATTACK6);
 	}
 }

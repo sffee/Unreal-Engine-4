@@ -121,11 +121,19 @@ struct FEnemyMontageInfo : public FTableRowBase
 {
 	GENERATED_BODY()
 
+	FEnemyMontageInfo()
+		: UseSeparateBrakingFriction(false)
+	{
+	}
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
 	EENEMY_STATE State;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* Montage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
+	bool UseSeparateBrakingFriction;
 };
 
 USTRUCT(Atomic, BlueprintType)

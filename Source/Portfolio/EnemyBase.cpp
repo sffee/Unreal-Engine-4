@@ -72,7 +72,10 @@ void AEnemyBase::PlayMontage(EENEMY_STATE _State)
 
 	FEnemyMontageInfo* MontageInfo = m_MontageTable->FindRow<FEnemyMontageInfo>(RowName, TEXT(""));
 	if (MontageInfo != nullptr)
+	{
 		m_AnimInst->Montage_Play(MontageInfo->Montage);
+		GetCharacterMovement()->bUseSeparateBrakingFriction = MontageInfo->UseSeparateBrakingFriction;
+	}
 }
 
 void AEnemyBase::ChangeState(EENEMY_STATE _NextState, bool _Ignore)

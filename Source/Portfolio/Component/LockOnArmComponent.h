@@ -33,6 +33,8 @@ class PORTFOLIO_API ULockOnArmComponent : public USpringArmComponent
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UTargetComponent* m_Target;
 
+	bool m_IsStart;
+
 public:
 	ULockOnArmComponent();
 
@@ -75,6 +77,9 @@ public:
 
 private:
 	void LengthUpdate();
+
+public:
+	virtual void BeginPlay() override;
 
 private:
 	TArray<UTargetComponent*> SearchTarget();

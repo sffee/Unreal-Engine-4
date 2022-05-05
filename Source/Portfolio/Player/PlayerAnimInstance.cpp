@@ -78,6 +78,7 @@ void UPlayerAnimInstance::AnimNotify_MoveStop()
 	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
 	if (Player != nullptr)
 	{
+		Player->GetCharacterMovement()->Velocity = FVector::ZeroVector;
 		Player->SetAttackMove(false);
 	}
 }
@@ -125,6 +126,15 @@ void UPlayerAnimInstance::AnimNotify_JumpLoop()
 	if (Player != nullptr)
 	{
 		Player->ChangeState(EPLAYER_STATE::JUMP_LOOP);
+	}
+}
+
+void UPlayerAnimInstance::AnimNotify_JumpDamageLoop()
+{
+	AMyPlayer* Player = Cast<AMyPlayer>(TryGetPawnOwner());
+	if (Player != nullptr)
+	{
+		Player->ChangeState(EPLAYER_STATE::JUMP_DAMAGE_LOOP);
 	}
 }
 

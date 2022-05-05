@@ -53,9 +53,6 @@ public:
 	void SetAttackMove(bool _Set)
 	{
 		m_AttackMove = _Set;
-
-		if (_Set == false)
-			GetMovementComponent()->StopMovementImmediately();
 	}
 
 public:

@@ -55,4 +55,13 @@ public:
 
 	UFUNCTION()
 	void AnimNotify_MoveStop();
+
+	UFUNCTION()
+	void AnimNotify_MoveSlowStop();
+
+	UFUNCTION()
+	void AnimNotify_LookToPlayer();
+
+	UFUNCTION()
+	void AnimNotify_Attack6();
 };

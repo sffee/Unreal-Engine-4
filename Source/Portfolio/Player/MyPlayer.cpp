@@ -131,13 +131,11 @@ void AMyPlayer::JumpUpdate()
 		if (GetMovementComponent()->IsMovingOnGround())
 		{
 			if (m_State == EPLAYER_STATE::JUMP_LOOP)
-			{
 				ChangeState(EPLAYER_STATE::JUMP_LANDING);
-			}
 			else if (m_State == EPLAYER_STATE::SWORD_JUMP_DOWNATTACK_LOOP)
-			{
 				ChangeState(EPLAYER_STATE::SWORD_JUMP_DOWNATTACK_END);
-			}
+			else if (m_State == EPLAYER_STATE::JUMP_DAMAGE_LOOP)
+				ChangeState(EPLAYER_STATE::JUMP_DAMAGE_LANDING);
 		}
 		else
 		{
@@ -353,6 +351,7 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 		break;
 	case EPLAYER_STATE::JUMP_LANDING:
 	case EPLAYER_STATE::SWORD_JUMP_DOWNATTACK_END:
+	case EPLAYER_STATE::JUMP_DAMAGE_LANDING:
 		m_Jump = false;
 		m_JumpSecond = false;
 		m_JumpAttack = false;
@@ -851,7 +850,19 @@ void AMyPlayer::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
 	GetCharacterMovement()->Velocity = FVector::ZeroVector;
 
 	LaunchCharacter(HitVector, false, false);
-	ChangeState(EPLAYER_STATE::DAMAGE, true);
+
+	if (m_State != EPLAYER_STATE::JUMP_DAMAGE_START && m_State != EPLAYER_STATE::JUMP_DAMAGE_LOOP)
+	{
+		if (0.f < _AttackInfo->KnockBackPowerZ)
+		{
+			m_Jump = true;
+			ChangeState(EPLAYER_STATE::JUMP_DAMAGE_START);
+		}
+		else
+		{
+			ChangeState(EPLAYER_STATE::DAMAGE, true);
+		}
+	}
 }
 
 bool AMyPlayer::IsPressMoveKey()
