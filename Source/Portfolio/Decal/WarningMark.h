@@ -13,16 +13,13 @@ class PORTFOLIO_API AWarningMark : public AActor
 	
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	UDecalComponent* m_BackDecal;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	UDecalComponent* m_FrontDecal;
-	UMaterialInstanceDynamic* m_FrontDecalInst;
+	UDecalComponent* m_Decal;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	float m_LifeTime;
 
 	float m_CheckLifeTime;
+	bool m_CreateEffect;
 
 public:	
 	AWarningMark();

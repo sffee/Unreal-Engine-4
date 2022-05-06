@@ -73,10 +73,16 @@ struct FAttackInfo : public FTableRowBase
 	GENERATED_BODY()
 
 	FAttackInfo()
-		: Radius(200.f)
+		: Damage(0.f)
+		, XPivot(0.f)
+		, Radius(200.f)
 		, Angle(360.f)
+		, KnockBackPowerXY(0.f)
+		, KnockBackPowerZ(0.f)
+		, CameraShake(nullptr)
 		, SlowPower(1.f)
 		, SlowTime(0.f)
+		, HitEffect(nullptr)
 		, HitEffectScale(1.f)
 	{
 

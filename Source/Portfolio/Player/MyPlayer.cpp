@@ -836,6 +836,12 @@ void AMyPlayer::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
 
 	m_Info.CurHP -= _AttackInfo->Damage;
 
+	FString a = FString::Printf(TEXT("Player = %f %f %f"), GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z);
+	LOG(Log, *a);
+
+	a = FString::Printf(TEXT("Actor = %f %f %f"), _Actor->GetActorLocation().X, _Actor->GetActorLocation().Y, _Actor->GetActorLocation().Z);
+	LOG(Log, *a);
+
 	FRotator Rotator = _Actor->GetActorRotation();
 	Rotator.Roll = 0.f;
 	Rotator.Pitch = 0.f;

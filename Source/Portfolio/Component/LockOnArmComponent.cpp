@@ -91,9 +91,6 @@ void ULockOnArmComponent::LengthUpdate()
 		float Ratio = FMath::Max(0.f, FMath::Min(Pos.Z / ZoomOutStart, 1.f));
 
 		TargetArmLength = (LengthMax - LengthMin) * Ratio + LengthMin;
-
-		FString a = FString::Printf(TEXT("%f %f %f %f"), LengthMin, LengthMax, Ratio, TargetArmLength);
-		LOG(Log, *a);
 	}
 }
 
