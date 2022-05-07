@@ -1,5 +1,7 @@
 #include "EnemyAnimInstance.h"
+
 #include "../EnemyBase.h"
+#include "Kwang.h"
 
 UEnemyAnimInstance::UEnemyAnimInstance()
 {
@@ -140,5 +142,23 @@ void UEnemyAnimInstance::AnimNotify_Attack6()
 	if (Enemy != nullptr)
 	{
 		Enemy->ChangeState(EENEMY_STATE::ATTACK6);
+	}
+}
+
+void UEnemyAnimInstance::AnimNotify_StartLightning()
+{
+	AKwang* Kwang = Cast<AKwang>(TryGetPawnOwner());
+	if (Kwang != nullptr)
+	{
+		Kwang->SetLightning(true);
+	}
+}
+
+void UEnemyAnimInstance::AnimNotify_EndLightning()
+{
+	AKwang* Kwang = Cast<AKwang>(TryGetPawnOwner());
+	if (Kwang != nullptr)
+	{
+		Kwang->SetLightning(false);
 	}
 }

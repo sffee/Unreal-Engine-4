@@ -87,8 +87,10 @@ void AEnemyBase::ChangeState(EENEMY_STATE _NextState, bool _Ignore)
 
 	PlayMontage(m_State);
 
-	if (EENEMY_STATE::ATTACK1 <= m_State && m_State <= EENEMY_STATE::ATTACK6)
+	if (EENEMY_STATE::ATTACK1 <= m_State && m_State <= EENEMY_STATE::ATTACK12)
 		m_Attack = true;
+	else
+		m_Attack = false;
 
 	switch (m_State)
 	{
@@ -96,7 +98,6 @@ void AEnemyBase::ChangeState(EENEMY_STATE _NextState, bool _Ignore)
 		Cast<AEnemyAIController>(Controller)->GetBlackboardComponent()->SetValueAsBool(TEXT("Attacking"), false);
 	case EENEMY_STATE::RUN:
 		m_Damage = false;
-		m_Attack = false;
 		break;
 	case EENEMY_STATE::DAMAGE_KNOCKBACK_FLY:
 		m_FlyDownCheck = false;

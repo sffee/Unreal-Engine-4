@@ -83,6 +83,9 @@ void AMyPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	FString a = FString::Printf(TEXT("%f %f %f"), GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z);
+	LOG(Log, *a);
+
 	HUDUpdate();
 	JumpUpdate();
 	CheckRunAnimation();
@@ -320,7 +323,7 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 		SetDamage(false);
 		break;
 	case EPLAYER_STATE::SWORD_RUN:
-		GetCharacterMovement()->MaxWalkSpeed = 800.f;
+		GetCharacterMovement()->MaxWalkSpeed = 4000.f;
 		GetCharacterMovement()->MaxAcceleration = 2048.f;
 		m_Attacking = false;
 		m_Moveable = true;

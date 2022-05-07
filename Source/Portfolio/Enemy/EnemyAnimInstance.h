@@ -64,4 +64,10 @@ public:
 
 	UFUNCTION()
 	void AnimNotify_Attack6();
+
+	UFUNCTION()
+	void AnimNotify_StartLightning();
+
+	UFUNCTION()
+	void AnimNotify_EndLightning();
 };

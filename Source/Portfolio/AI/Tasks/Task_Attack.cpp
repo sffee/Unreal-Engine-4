@@ -24,6 +24,8 @@ EBTNodeResult::Type UTask_Attack::ExecuteTask(UBehaviorTreeComponent& OwnerComp,
 	if (Enemy == nullptr)
 		return EBTNodeResult::Failed;
 
+	Controller->StopMovement();
+
 	UBlackboardComponent* BB = Controller->GetBlackboardComponent();
 	BB->SetValueAsBool(TEXT("Attacking"), true);
 
@@ -40,6 +42,12 @@ EBTNodeResult::Type UTask_Attack::ExecuteTask(UBehaviorTreeComponent& OwnerComp,
 		BB->SetValueAsFloat(TEXT("Attack3Cooltime"), Cooltime);
 	else if (NextState == EENEMY_STATE::ATTACK4)
 		BB->SetValueAsFloat(TEXT("Attack4Cooltime"), Cooltime);
+	else if (NextState == EENEMY_STATE::ATTACK5)
+		BB->SetValueAsFloat(TEXT("Attack5Cooltime"), Cooltime);
+	else if (NextState == EENEMY_STATE::ATTACK6)
+		BB->SetValueAsFloat(TEXT("Attack6Cooltime"), Cooltime);
+	else if (NextState == EENEMY_STATE::ATTACK7)
+		BB->SetValueAsFloat(TEXT("Attack7Cooltime"), Cooltime);
 
 	Enemy->ChangeState(NextState);
 

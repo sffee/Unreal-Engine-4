@@ -18,7 +18,7 @@ void UService_Cooltime_Boss::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* 
 	if (Controller == nullptr)
 		return;
 
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 7; i++)
 	{
 		FString Str = "Attack" + FString::FromInt(i + 1) + "Cooltime";
 		float Cooltime = Controller->GetBlackboardComponent()->GetValueAsFloat(*Str);

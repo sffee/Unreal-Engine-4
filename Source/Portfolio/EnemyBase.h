@@ -106,7 +106,7 @@ protected:
 	void PlayMontage(EENEMY_STATE _State);
 
 public:
-	void ChangeState(EENEMY_STATE _NextState, bool _Ignore = false);
+	virtual void ChangeState(EENEMY_STATE _NextState, bool _Ignore = false);
 
 public:
 	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo) override;

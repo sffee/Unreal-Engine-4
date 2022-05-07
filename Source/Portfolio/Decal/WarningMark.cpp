@@ -5,7 +5,7 @@
 #include "../Player/MyPlayer.h"
 
 AWarningMark::AWarningMark()
-	: m_LifeTime(2.f)
+	: m_LifeTime(1.f)
 	, m_CheckLifeTime(0.f)
 	, m_CreateEffect(false)
 {
@@ -46,7 +46,7 @@ void AWarningMark::Tick(float DeltaTime)
 		FVector End = Pos;
 		End.Z -= 10000.f;
 
-		GetWorld()->LineTraceSingleByChannel(Result, Pos, End, ECC_GameTraceChannel9, param);
+		bool Hit = GetWorld()->LineTraceSingleByChannel(Result, Pos, End, ECC_GameTraceChannel9, param);
 
 		FActorSpawnParameters SpawnParam = {};
 

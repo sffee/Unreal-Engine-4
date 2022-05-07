@@ -6,8 +6,12 @@
 #include <BehaviorTree/BlackboardComponent.h>
 #include "EnemyAIController.h"
 
+#include "../Decal/WarningMark.h"
+
 AKwang::AKwang()
 	: m_WaitTime(0.f)
+	, m_Lightning(false)
+	, m_LightningTimer(0.f)
 {
 	m_Info.MaxHP = 2000.f;
 	m_Info.CurHP = 2000.f;
@@ -43,6 +47,12 @@ AKwang::AKwang()
 	ConstructorHelpers::FObjectFinder<UDataTable> AttackMoveTable(TEXT("DataTable'/Game/BlueprintClass/Enemy/Kwang/DataTable/KwangAttackMoveTable.KwangAttackMoveTable'"));
 	if (AttackMoveTable.Succeeded())
 		m_AttackMoveTable = AttackMoveTable.Object;
+
+	ConstructorHelpers::FClassFinder<AWarningMark> WarningMark(TEXT("Blueprint'/Game/BlueprintClass/Enemy/Kwang/BP_WarningMark.BP_WarningMark_C'"));
+	if (WarningMark.Succeeded())
+		m_WarningMark = WarningMark.Class;
+
+	m_CooltimeWaitDistance = 300.f;
 }
 
 void AKwang::BeginPlay()
@@ -52,7 +62,12 @@ void AKwang::BeginPlay()
 	UBlackboardComponent* BB = Cast<AEnemyAIController>(Controller)->GetBlackboardComponent();
 	BB->SetValueAsFloat(TEXT("Attack1Cooltime"), 0.f);
 	BB->SetValueAsFloat(TEXT("Attack2Cooltime"), 0.f);
+	BB->SetValueAsFloat(TEXT("Attack3Cooltime"), 5.f);
+	BB->SetValueAsFloat(TEXT("Attack4Cooltime"), 5.f);
+	BB->SetValueAsFloat(TEXT("Attack7Cooltime"), 10.f);
 	BB->SetValueAsBool(TEXT("Attacking"), false);
+
+	DrawDebugSphere(GetWorld(), FVector(-4700.f, 15600.f, -6700.f), 2700.f, 40, FColor::Red, false, 100.f);
 }
 
 void AKwang::Tick(float DeltaTime)
@@ -61,6 +76,18 @@ void AKwang::Tick(float DeltaTime)
 
 	StateUpdate();
 	Attack4Update();
+	LightningUpdate(DeltaTime);
+}
+
+void AKwang::ChangeState(EENEMY_STATE _NextState, bool _Ignore)
+{
+	Super::ChangeState(_NextState, _Ignore);
+
+	if (m_State == EENEMY_STATE::RUN)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = 1000.f;
+		GetCharacterMovement()->MaxAcceleration = 2048.f;
+	}
 }
 
 void AKwang::StateUpdate()
@@ -110,4 +137,34 @@ void AKwang::Attack4Update()
 void AKwang::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
 {
 	Super::Damage(_Actor, _AttackInfo);
+}
+
+void AKwang::LightningUpdate(float _DeltaTime)
+{
+	if (m_Lightning == false)
+		return;
+	
+	m_LightningTimer -= _DeltaTime;
+	if (m_LightningTimer <= 0.f)
+	{
+		m_LightningTimer = 1.f;
+
+		for (int i = 0; i < 8; i++)
+		{
+			for (int j = 0; j < 10; j++)
+			{
+				float Distance = FMath::RandRange(i * 2160.f / 8, 2700.f);
+				float Angle = FMath::RandRange((i % 4) * 90.f, (i % 4) * 90.f + 90.f);
+				Angle = FVector::DegreesToRadians(FVector(Angle, Angle, Angle)).X;
+				FVector RandomPos(-4700.f, 15600.f, -6700.f);
+				RandomPos += FVector(FMath::Sin(Angle) * Distance, FMath::Cos(Angle) * Distance, 0.f);
+
+				FActorSpawnParameters SpawnParam = {};
+				SpawnParam.OverrideLevel = GetLevel();
+				SpawnParam.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+				AWarningMark* WarningMark = GetWorld()->SpawnActor<AWarningMark>(m_WarningMark, RandomPos, FRotator::ZeroRotator, SpawnParam);
+			}
+		}
+	}
 }

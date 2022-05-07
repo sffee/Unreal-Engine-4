@@ -35,8 +35,6 @@ EBTNodeResult::Type UTask_Trace_Boss::ExecuteTask(UBehaviorTreeComponent& OwnerC
 	float Distance = FVector::Distance(Boss->GetActorLocation(), Player->GetActorLocation());
 	if (Boss->GetCooltimeWaitDistance() < Distance)
 	{
-		Boss->ChangeState(EENEMY_STATE::WALK_FRONT);
-
 		FVector PlayerPos = Player->GetActorLocation();
 		PlayerPos.Z = Controller->GetPawn()->GetActorLocation().Z;
 		UAIBlueprintHelperLibrary::SimpleMoveToLocation(Controller, PlayerPos);
