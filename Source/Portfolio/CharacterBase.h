@@ -5,6 +5,8 @@
 #include "Manager/LevelStreamManager.h"
 #include "Projectile/Projectile.h"
 
+#include "UI/DamageTextActor.h"
+
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "CharacterBase.generated.h"
@@ -16,6 +18,9 @@ class PORTFOLIO_API ACharacterBase : public ACharacter
 
 public:
 	ACharacterBase();
+
+private:
+	TSubclassOf<ADamageTextActor> m_DamageTextActor;
 
 protected:
 	UDataTable* m_MontageTable;
@@ -56,7 +61,7 @@ public:
 	}
 
 public:
-	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo);
+	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo, bool _Player = false);
 	void SpawnProjectile(TSubclassOf<AProjectile> _Particle, const FVector& _Position, const FRotator& _Rotation, const FVector& _Velocity);
 
 protected:

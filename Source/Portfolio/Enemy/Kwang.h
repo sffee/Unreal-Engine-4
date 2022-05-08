@@ -38,7 +38,7 @@ private:
 	void LightningUpdate(float _DeltaTime);
 
 public:
-	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo) override;
+	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo, bool _Player = false) override;
 
 public:
 	virtual void BeginPlay() override;

@@ -134,9 +134,9 @@ void AKwang::Attack4Update()
 	}
 }
 
-void AKwang::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
+void AKwang::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo, bool _Player)
 {
-	Super::Damage(_Actor, _AttackInfo);
+	Super::Damage(_Actor, _AttackInfo, _Player);
 }
 
 void AKwang::LightningUpdate(float _DeltaTime)

@@ -16,7 +16,7 @@ private:
 	void SpawnUpdate();
 
 public:
-	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo) override;
+	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo, bool _Player = false) override;
 	virtual bool AttackCheck() override;
 
 public:

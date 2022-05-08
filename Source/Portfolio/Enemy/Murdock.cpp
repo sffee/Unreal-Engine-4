@@ -33,6 +33,10 @@ AMurdock::AMurdock()
 	ConstructorHelpers::FClassFinder<AProjectile> AttackProjectile(TEXT("Blueprint'/Game/BlueprintClass/Enemy/Murdock/BP_Bullet.BP_Bullet_C'"));
 	if (AttackProjectile.Succeeded())
 		m_AttackProjectile = AttackProjectile.Class;
+
+	ConstructorHelpers::FObjectFinder<UDataTable> AttackCooltime(TEXT("DataTable'/Game/BlueprintClass/Enemy/Murdock/DataTable/MurdockAttackCooltimeTable.MurdockAttackCooltimeTable'"));
+	if (AttackCooltime.Succeeded())
+		m_AttackCooltimeTable = AttackCooltime.Object;
 }
 
 void AMurdock::BeginPlay()
@@ -45,12 +49,12 @@ void AMurdock::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AMurdock::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
+void AMurdock::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo, bool _Player)
 {
 	if (m_Fly == false && m_Info.CurHP <= 0.f)
 		return;
 
-	Super::Damage(_Actor, _AttackInfo);
+	Super::Damage(_Actor, _AttackInfo, _Player);
 
 	m_Info.CurHP -= _AttackInfo->Damage;
 	SetHP(m_Info.CurHP / m_Info.MaxHP);
@@ -89,7 +93,9 @@ void AMurdock::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
 		{
 			UEnemyHPBarWidget* HPBarWidget = Cast<UEnemyHPBarWidget>(m_WidgetComponent->GetWidget());
 			HPBarWidget->SetVisibility(ESlateVisibility::Hidden);
-			m_TargetComponent->Death();
+
+			if (m_TargetComponent != nullptr)
+				m_TargetComponent->Death();
 
 			if (_AttackInfo->KnockBackPowerXY == 0.f)
 			{

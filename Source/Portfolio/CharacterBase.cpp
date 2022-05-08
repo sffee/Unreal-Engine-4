@@ -10,6 +10,9 @@ ACharacterBase::ACharacterBase()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	ConstructorHelpers::FClassFinder<ADamageTextActor> DamageTextActor(TEXT("Blueprint'/Game/BlueprintClass/UI/BP_DamageText.BP_DamageText_C'"));
+	if (DamageTextActor.Succeeded())
+		m_DamageTextActor = DamageTextActor.Class;
 }
 
 void ACharacterBase::BeginPlay()
@@ -47,9 +50,23 @@ void ACharacterBase::SpawnProjectile(TSubclassOf<AProjectile> _Particle, const F
 	Projectile->FinishSpawning(Projectile->GetTransform());
 }
 
-void ACharacterBase::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
+void ACharacterBase::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo, bool _Player)
 {
 	HitEffect();
+
+	FActorSpawnParameters SpawnParam = {};
+	SpawnParam.OverrideLevel = GetLevel();
+	SpawnParam.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	SpawnParam.bDeferConstruction = true;
+
+	FVector Pos = GetActorLocation();
+	Pos.Y += FMath::RandRange(-50.f, 50.f);
+	Pos.Z += FMath::RandRange(0.f, 30.f);
+
+	ADamageTextActor* DamageTextActor = GetWorld()->SpawnActor<ADamageTextActor>(m_DamageTextActor, Pos, FRotator::ZeroRotator, SpawnParam);
+
+	DamageTextActor->FinishSpawning(DamageTextActor->GetTransform());
+	DamageTextActor->SetDamageText(static_cast<int>(_AttackInfo->Damage), _Player);
 }
 
 void ACharacterBase::HitEffect()

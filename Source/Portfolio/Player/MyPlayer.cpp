@@ -32,10 +32,6 @@ AMyPlayer::AMyPlayer()
 	m_LockOnArm->SetupAttachment(GetMesh());
 	m_Cam->SetupAttachment(m_LockOnArm);
 
-	m_Info.WeaponType = EWEAPON_TYPE::SWORD;
-	m_Info.CurHP = 200.f;
-	m_Info.MaxHP = 200.f;
-
 	ConstructorHelpers::FObjectFinder<USkeletalMesh> PlayerMesh(TEXT("SkeletalMesh'/Game/Player/Character/Meshes/Player.Player'"));
 	if (PlayerMesh.Succeeded())
 		GetMesh()->SetSkeletalMesh(PlayerMesh.Object);
@@ -278,6 +274,12 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 		return;
 	}
 
+	if (m_State != _NextState)
+	{
+		if (m_State == EPLAYER_STATE::EVADE)
+			GetCapsuleComponent()->SetCollisionProfileName(TEXT("Player"));
+	}
+
 	m_State = _NextState;
 
 	m_Moveable = true;
@@ -304,12 +306,6 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 	if (_NextState == EPLAYER_STATE::EVADE)
 		m_AttackCancleable = false;
 
-	if (m_State != _NextState)
-	{
-		if (m_State == EPLAYER_STATE::EVADE)
-			GetCapsuleComponent()->SetCollisionProfileName(TEXT("Player"));
-	}
-
 	PlayMontage(m_State);
 
 	switch (m_State)
@@ -323,7 +319,7 @@ void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
 		SetDamage(false);
 		break;
 	case EPLAYER_STATE::SWORD_RUN:
-		GetCharacterMovement()->MaxWalkSpeed = 4000.f;
+		GetCharacterMovement()->MaxWalkSpeed = 800.f;
 		GetCharacterMovement()->MaxAcceleration = 2048.f;
 		m_Attacking = false;
 		m_Moveable = true;
@@ -462,7 +458,7 @@ bool AMyPlayer::HitProcess(const FHitResult& _HitResult, const FAttackInfo* _Att
 			float Height = Enemy->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() / 2.f;
 			float YRandom = FMath::RandRange(-Radius, Radius);
 			float ZRandom = FMath::RandRange(-Height, Height);
-			FTransform Trans(Enemy->GetMesh()->GetSocketLocation(TEXT("HitEffect")) + FVector(0.f, YRandom, ZRandom));
+			FTransform Trans(Enemy->GetMesh()->GetSocketLocation(TEXT("Impact")) + FVector(0.f, YRandom, ZRandom));
 
 			UObject* Object = ULevelStreamManager::GetInst(GetWorld())->FindAsset(FName(_AttackInfo->HitEffect->GetPathName()));
 			UEffectManager::GetInst(GetWorld())->CreateEffect(Object, Trans, GetLevel(), _AttackInfo->HitEffectScale);
@@ -807,43 +803,24 @@ void AMyPlayer::OnBeginOverlap(UPrimitiveComponent* _PrimitiveComponent, AActor*
 {
 	if (_OtherComp->GetCollisionObjectType() == ECC_GameTraceChannel5)
 	{
-		HitEffect();
-
 		AProjectile* Projectile = Cast<AProjectile>(_OtherActor);
-		m_Info.CurHP -= Projectile->GetDamage();
 
-		if (m_Jump == true)
-			return;
+		FAttackInfo AttackInfo;
+		AttackInfo.Damage = Projectile->GetDamage();
+		AttackInfo.KnockBackPowerXY = 500.f;
 
-		FVector TargetDir = _OtherActor->GetActorLocation() - GetActorLocation();
-		FRotator TargetRot = TargetDir.GetSafeNormal().Rotation();
-		FRotator MyRot = GetControlRotation();
-		MyRot.Pitch = 0.f;
-		MyRot.Yaw = TargetRot.Yaw;
-
-		SetActorRotation(MyRot);
-
-		GetMovementComponent()->StopMovementImmediately();
-
-		FVector HitVector = GetActorForwardVector() * -500.f;
-		HitVector.Z = 0.f;
-		LaunchCharacter(HitVector, false, false);
-
-		ChangeState(EPLAYER_STATE::DAMAGE, true);
+		Damage(_OtherActor, &AttackInfo, true);
 	}
 }
 
-void AMyPlayer::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
+void AMyPlayer::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo, bool _Player)
 {
-	Super::Damage(_Actor, _AttackInfo);
+	Super::Damage(_Actor, _AttackInfo, true);
 
 	m_Info.CurHP -= _AttackInfo->Damage;
 
-	FString a = FString::Printf(TEXT("Player = %f %f %f"), GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z);
-	LOG(Log, *a);
-
-	a = FString::Printf(TEXT("Actor = %f %f %f"), _Actor->GetActorLocation().X, _Actor->GetActorLocation().Y, _Actor->GetActorLocation().Z);
-	LOG(Log, *a);
+	if (m_Jump == true)
+		return;
 
 	FRotator Rotator = _Actor->GetActorRotation();
 	Rotator.Roll = 0.f;

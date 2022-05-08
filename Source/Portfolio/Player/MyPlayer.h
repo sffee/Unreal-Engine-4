@@ -60,7 +60,7 @@ private:
 public:
 	AMyPlayer();
 
-	void SetPlayerInfo(const FPlayerInfo& _Info)
+	void SetPlayerInfo(FPlayerInfo& _Info)
 	{
 		m_Info = _Info;
 	}
@@ -147,7 +147,7 @@ private:
 	FRotator GetPressKeyRotation();
 
 public:
-	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo) override;
+	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo, bool _Player = false) override;
 
 private:
 	UFUNCTION()

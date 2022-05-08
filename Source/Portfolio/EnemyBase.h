@@ -109,7 +109,7 @@ public:
 	virtual void ChangeState(EENEMY_STATE _NextState, bool _Ignore = false);
 
 public:
-	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo) override;
+	virtual void Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo, bool _Player = false) override;
 	void Dissolve();
 
 public:

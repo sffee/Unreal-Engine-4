@@ -10,6 +10,8 @@ AMinions::AMinions()
 	m_Info.MaxHP = 200.f;
 	m_Info.CurHP = 200.f;
 
+	m_CooltimeWaitDistance = 180.f;
+
 	ConstructorHelpers::FObjectFinder<UBlackboardData> Blackboard(TEXT("BlackboardData'/Game/BlueprintClass/Enemy/Minions/BB_Minions.BB_Minions'"));
 	if (Blackboard.Succeeded())
 		m_Blackboard = Blackboard.Object;
@@ -33,6 +35,10 @@ AMinions::AMinions()
 	ConstructorHelpers::FObjectFinder<UDataTable> AttackInfoTable(TEXT("DataTable'/Game/BlueprintClass/Enemy/Minions/DataTable/MinionsAttackInfoTable.MinionsAttackInfoTable'"));
 	if (AttackInfoTable.Succeeded())
 		m_AttackInfoTable = AttackInfoTable.Object;
+
+	ConstructorHelpers::FObjectFinder<UDataTable> AttackCooltime(TEXT("DataTable'/Game/BlueprintClass/Enemy/Minions/DataTable/MinionsAttackCooltimeTable.MinionsAttackCooltimeTable'"));
+	if (AttackCooltime.Succeeded())
+		m_AttackCooltimeTable = AttackCooltime.Object;
 }
 
 void AMinions::BeginPlay()
@@ -64,12 +70,12 @@ void AMinions::SpawnUpdate()
 	}
 }
 
-void AMinions::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
+void AMinions::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo, bool _Player)
 {
 	if (m_Fly == false && m_Info.CurHP <= 0.f)
 		return;
 
-	Super::Damage(_Actor, _AttackInfo);
+	Super::Damage(_Actor, _AttackInfo, _Player);
 
 	m_Info.CurHP -= _AttackInfo->Damage;
 	SetHP(m_Info.CurHP / m_Info.MaxHP);
@@ -108,7 +114,9 @@ void AMinions::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
 		{
 			UEnemyHPBarWidget* HPBarWidget = Cast<UEnemyHPBarWidget>(m_WidgetComponent->GetWidget());
 			HPBarWidget->SetVisibility(ESlateVisibility::Hidden);
-			m_TargetComponent->Death();
+			
+			if (m_TargetComponent != nullptr)
+				m_TargetComponent->Death();
 
 			if (_AttackInfo->KnockBackPowerXY == 0.f)
 			{

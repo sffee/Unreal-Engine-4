@@ -23,8 +23,8 @@ AEnemyBase::AEnemyBase()
 	GetCapsuleComponent()->SetCollisionProfileName("Enemy");
 	GetMesh()->SetCollisionProfileName("NoCollision");
 
-	m_TargetComponent = CreateDefaultSubobject<UTargetComponent>(TEXT("Target"));
-	m_TargetComponent->SetupAttachment(GetMesh(), TEXT("LockOn"));
+	m_TargetComponent = CreateDefaultSubobject<UTargetComponent>(TEXT("TargetComponent"));
+	m_TargetComponent->SetupAttachment(GetMesh(), TEXT("Aim_Target"));
 
 	JumpMaxCount = 2;
 }
@@ -108,7 +108,9 @@ void AEnemyBase::ChangeState(EENEMY_STATE _NextState, bool _Ignore)
 		if (Die_Delegate.IsBound())
 			Die_Delegate.Execute();
 
-		m_TargetComponent->Death();
+		if (m_TargetComponent != nullptr)
+			m_TargetComponent->Death();
+		
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
 	}
@@ -121,9 +123,9 @@ void AEnemyBase::Tick(float DeltaTime)
 	DissolveUpdate(DeltaTime);
 }
 
-void AEnemyBase::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo)
+void AEnemyBase::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo, bool _Player)
 {
-	Super::Damage(_Actor, _AttackInfo);
+	Super::Damage(_Actor, _AttackInfo, _Player);
 }
 
 void AEnemyBase::Dissolve()
