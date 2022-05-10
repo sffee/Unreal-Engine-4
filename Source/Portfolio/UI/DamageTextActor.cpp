@@ -7,7 +7,6 @@ ADamageTextActor::ADamageTextActor()
 	PrimaryActorTick.bCanEverTick = true;
 
 	m_DamageTextWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("DamageTextWidget"));
-	//m_DamageTextWidget->SetupAttachment();
 }
 
 void ADamageTextActor::BeginPlay()

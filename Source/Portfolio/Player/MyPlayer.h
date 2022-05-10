@@ -141,6 +141,7 @@ private:
 	void LockOnUpAction();
 	void SpecialAttackDownAction();
 	void SpecialAttackUpAction();
+	void UsePotionAction();
 
 private:
 	bool IsPressMoveKey();

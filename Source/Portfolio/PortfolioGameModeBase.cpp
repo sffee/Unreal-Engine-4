@@ -20,7 +20,7 @@ APortfolioGameModeBase::APortfolioGameModeBase()
 	if (MainCharacterClass.Succeeded())
 		DefaultPawnClass = MainCharacterClass.Class;
 
-	ConstructorHelpers::FClassFinder<UUserWidget> MainHUD(TEXT("WidgetBlueprint'/Game/BlueprintClass/UI/MainHUD.MainHUD_C'"));
+	ConstructorHelpers::FClassFinder<UUserWidget> MainHUD(TEXT("WidgetBlueprint'/Game/BlueprintClass/UI/WBP_MainHUD.WBP_MainHUD_C'"));
 	if (MainHUD.Succeeded())
 		m_MainHUDClass = MainHUD.Class;
 }

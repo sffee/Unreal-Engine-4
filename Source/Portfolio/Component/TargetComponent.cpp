@@ -3,7 +3,7 @@
 UTargetComponent::UTargetComponent()
 	: m_Death(false)
 {
-	ConstructorHelpers::FClassFinder<ULockOnWidget> LockOnWidget(TEXT("WidgetBlueprint'/Game/BlueprintClass/UI/LockOn.LockOn_C'"));
+	ConstructorHelpers::FClassFinder<ULockOnWidget> LockOnWidget(TEXT("WidgetBlueprint'/Game/BlueprintClass/UI/WBP_LockOn.WBP_LockOn_C'"));
 	if (LockOnWidget.Succeeded())
 	{
 		m_LockOnWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("LockOnWidget"));

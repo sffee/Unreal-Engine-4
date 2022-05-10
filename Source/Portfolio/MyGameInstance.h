@@ -12,6 +12,7 @@ class PORTFOLIO_API UMyGameInstance : public UGameInstance
 	GENERATED_BODY()
 
 	UDataTable* m_PlayerInfoTable;
+	UDataTable* m_ItemDataTable;
 
 public:
 	FPlayerInfo* GetPlayerInfo()

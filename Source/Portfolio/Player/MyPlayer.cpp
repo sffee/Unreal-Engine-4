@@ -6,6 +6,7 @@
 #include "../Component/LockOnArmComponent.h"
 #include "../Component/TargetComponent.h"
 #include "../PortfolioGameModeBase.h"
+#include "../Manager/InventoryManager.h"
 
 AMyPlayer::AMyPlayer()
 	: m_State(EPLAYER_STATE::SWORD_IDLE_L)
@@ -73,6 +74,8 @@ void AMyPlayer::BeginPlay()
 	m_EtcMesh.Add(Cast<USkeletalMeshComponent>(GetDefaultSubobjectByName(TEXT("Sword"))));
 
 	JumpMaxCount = 3;
+
+	UInventoryManager::GetInst(GetWorld())->AddItem(EITEM_ID::HP_POTION, 3);
 }
 
 void AMyPlayer::Tick(float DeltaTime)
@@ -265,6 +268,8 @@ void AMyPlayer::SetupPlayerInputComponent(class UInputComponent* PlayerInputComp
 
 	PlayerInputComponent->BindAction(TEXT("SpecialAttack"), EInputEvent::IE_Pressed, this, &AMyPlayer::SpecialAttackDownAction);
 	PlayerInputComponent->BindAction(TEXT("SpecialAttack"), EInputEvent::IE_Released, this, &AMyPlayer::SpecialAttackUpAction);
+
+	PlayerInputComponent->BindAction(TEXT("UsePotion"), EInputEvent::IE_Pressed, this, &AMyPlayer::UsePotionAction);
 }
 
 void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
@@ -564,6 +569,8 @@ void AMyPlayer::LookUp(float _Scale)
 
 void AMyPlayer::JumpAction()
 {
+	UInventoryManager::GetInst(GetWorld())->AddItem(EITEM_ID::HP_POTION);
+
 	if (IsDamage())
 		return;
 
@@ -734,6 +741,8 @@ void AMyPlayer::LockOnDownAction()
 {
 	m_PressLockOn = true;
 	m_PressLockOnTime = GetWorld()->GetRealTimeSeconds();
+
+	m_Info.CurHP -= 100.f;
 }
 
 void AMyPlayer::LockOnUpAction()
@@ -797,6 +806,18 @@ void AMyPlayer::SpecialAttackDownAction()
 void AMyPlayer::SpecialAttackUpAction()
 {
 	m_PressSpecialAttackKey = false;
+}
+
+void AMyPlayer::UsePotionAction()
+{
+	bool Success = UInventoryManager::GetInst(GetWorld())->UseItem(EITEM_ID::HP_POTION);
+	
+	if (Success)
+	{
+		m_Info.CurHP += UInventoryManager::GetInst(GetWorld())->GetItemInfo(EITEM_ID::HP_POTION)->Heal;
+		if (m_Info.MaxHP < m_Info.CurHP)
+			m_Info.CurHP = m_Info.MaxHP;
+	}
 }
 
 void AMyPlayer::OnBeginOverlap(UPrimitiveComponent* _PrimitiveComponent, AActor* _OtherActor, UPrimitiveComponent* _OtherComp, int32 _OtherBodyIndex, bool _bFromSweep, const FHitResult& _SweepResult)

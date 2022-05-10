@@ -26,5 +26,11 @@ public:
 	void UpdateHPBar(float _Ratio);
 
 public:
+	UMainHUD* GetMainHUD()
+	{
+		return m_MainHUD;
+	}
+
+public:
 	virtual void BeginPlay() override;
 };

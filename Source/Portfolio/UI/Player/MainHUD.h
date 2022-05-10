@@ -3,6 +3,7 @@
 #include "../../Etc/global.h"
 
 #include "PlayerHPBarWidget.h"
+#include "../Inventory/PotionHUD.h"
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
@@ -15,11 +16,17 @@ class PORTFOLIO_API UMainHUD : public UUserWidget
 
 private:
 	UPlayerHPBarWidget* m_PlayerHPBarWidget;
+	UPotionHUD* m_PotionHUD;
 
 public:
 	UPlayerHPBarWidget* GetHPBarWidget()
 	{
 		return m_PlayerHPBarWidget;
+	}
+
+	void SetPotionCount(int _Count)
+	{
+		m_PotionHUD->SetCount(_Count);
 	}
 
 public:

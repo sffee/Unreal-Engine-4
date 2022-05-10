@@ -87,3 +87,17 @@ enum class EENEMY_STATE : uint8
 	FALL,
 	DEATH
 };
+
+UENUM(BlueprintType)
+enum class EITEM_TYPE : uint8
+{
+	CONSUMABLE,
+	END
+};
+
+UENUM(BlueprintType)
+enum class EITEM_ID : uint8
+{
+	HP_POTION,
+	END
+};
