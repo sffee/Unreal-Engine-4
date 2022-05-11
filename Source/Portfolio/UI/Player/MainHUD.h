@@ -29,6 +29,8 @@ public:
 		m_PotionHUD->SetCount(_Count);
 	}
 
+	bool UsePotion();
+
 public:
 	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry& Geometry, float DT) override;

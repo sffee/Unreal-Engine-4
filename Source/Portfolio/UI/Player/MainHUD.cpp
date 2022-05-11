@@ -12,3 +12,8 @@ void UMainHUD::NativeTick(const FGeometry& Geometry, float DT)
 {
 	Super::NativeTick(Geometry, DT);
 }
+
+bool UMainHUD::UsePotion()
+{
+	return m_PotionHUD->UsePotion();
+}

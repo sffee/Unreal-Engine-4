@@ -110,14 +110,14 @@ bool UInventoryManager::UseItem(EITEM_ID _ID)
 
 	if (_ID == EITEM_ID::HP_POTION)
 	{
-		--FindData->Count;
-
 		APortfolioGameModeBase* GameMode = Cast<APortfolioGameModeBase>(UGameplayStatics::GetGameMode(m_World));
 		UMainHUD* MainHUD = GameMode->GetMainHUD();
 
-		MainHUD->SetPotionCount(FindData->Count);
-
-		return true;
+		if (MainHUD->UsePotion())
+		{
+			MainHUD->SetPotionCount(--FindData->Count);
+			return true;
+		}
 	}
 
 	return false;
