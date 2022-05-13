@@ -7,7 +7,6 @@
 #include "Manager/Effectmanager.h"
 
 #include "Enemy/EnemyAIController.h"
-#include "Component/TargetComponent.h"
 #include "Player/MyPlayer.h"
 
 AEnemyBase::AEnemyBase()
@@ -34,6 +33,7 @@ void AEnemyBase::BeginPlay()
 	Super::BeginPlay();
 
 	m_AnimInst = Cast<UEnemyAnimInstance>(GetMesh()->GetAnimInstance());
+	m_TargetComponent = Cast<UTargetComponent>(GetDefaultSubobjectByName(TEXT("TargetComponent")));
 
 	InitDataTableMap();
 

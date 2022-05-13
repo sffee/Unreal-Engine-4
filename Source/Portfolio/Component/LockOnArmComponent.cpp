@@ -84,11 +84,10 @@ void ULockOnArmComponent::LengthUpdate()
 
 	if (Hit)
 	{
-		float Distance = FVector::Distance(Pos, result.ImpactPoint);
-		Distance -= 90.f;
+		float Distance = result.Distance;
+		Distance -= 90.f + LengthMin;
 
-		Pos.Z -= ZoomOutStart;
-		float Ratio = FMath::Max(0.f, FMath::Min(Pos.Z / ZoomOutStart, 1.f));
+		float Ratio = FMath::Max(0.f, FMath::Min(Distance / ZoomOutStart, 1.f));
 
 		TargetArmLength = (LengthMax - LengthMin) * Ratio + LengthMin;
 	}

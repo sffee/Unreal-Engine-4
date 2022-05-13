@@ -18,6 +18,11 @@ UTargetComponent::UTargetComponent()
 	SetCollisionProfileName("LockOn");
 }
 
+UTargetComponent::~UTargetComponent()
+{
+	int a = 0;
+}
+
 void UTargetComponent::LockOn()
 {
 	Cast<ULockOnWidget>(m_LockOnWidgetComponent->GetWidget())->SetLockOnVisible(true);

@@ -31,7 +31,7 @@ class PORTFOLIO_API ULockOnArmComponent : public USpringArmComponent
 	float m_LengthMax;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UTargetComponent* m_Target;
+	UTargetComponent* m_Target;
 
 	bool m_IsStart;
 

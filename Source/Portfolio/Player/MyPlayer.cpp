@@ -82,9 +82,6 @@ void AMyPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	FString a = FString::Printf(TEXT("%f %f %f"), GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z);
-	LOG(Log, *a);
-
 	HUDUpdate();
 	JumpUpdate();
 	CheckRunAnimation();

@@ -8,6 +8,8 @@
 #include "Etc/define.h"
 #include "Etc/MyStruct.h"
 
+#include "Component/TargetComponent.h"
+
 #include "CoreMinimal.h"
 #include "CharacterBase.h"
 #include "EnemyBase.generated.h"
@@ -35,8 +37,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
 	UBehaviorTree* m_BehaviorTree;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Info, meta = (AllowPrivateAccess = "true"))
-	class UTargetComponent* m_TargetComponent;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UTargetComponent* m_TargetComponent;
 
 	float m_CooltimeWaitDistance;
 

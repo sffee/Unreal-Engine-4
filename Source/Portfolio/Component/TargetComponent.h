@@ -13,6 +13,7 @@ class PORTFOLIO_API UTargetComponent : public USphereComponent
 	GENERATED_BODY()
 
 private:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	UWidgetComponent* m_LockOnWidgetComponent;
 
 private:
@@ -35,4 +36,5 @@ public:
 
 public:
 	UTargetComponent();
+	~UTargetComponent();
 };
