@@ -12,6 +12,7 @@ class PORTFOLIO_API ULockOnWidget : public UUserWidget
 	GENERATED_BODY()
 
 private:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true")) 
 	UImage* m_LockOnImage;
 
 public:
@@ -22,6 +23,9 @@ public:
 		else
 			m_LockOnImage->SetVisibility(ESlateVisibility::Hidden);
 	}
+
+public:
+	~ULockOnWidget();
 	
 public:
 	virtual void NativeConstruct() override;

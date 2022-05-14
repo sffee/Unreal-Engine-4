@@ -9,6 +9,7 @@
 #include "Etc/MyStruct.h"
 
 #include "Component/TargetComponent.h"
+#include "UI/LockOnWidget.h"
 
 #include "CoreMinimal.h"
 #include "CharacterBase.h"
@@ -39,6 +40,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	UTargetComponent* m_TargetComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UWidgetComponent* m_LockOnWidgetComponent;
 
 	float m_CooltimeWaitDistance;
 

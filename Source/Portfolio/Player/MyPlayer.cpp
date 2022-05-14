@@ -26,6 +26,7 @@ AMyPlayer::AMyPlayer()
 	, m_JumpAttackB(false)
 	, m_DashAttackTimer(0.f)
 	, m_LoopAttackCheck(false)
+	, m_Interaction(false)
 {
 	m_LockOnArm = CreateDefaultSubobject<ULockOnArmComponent>(TEXT("LockOnArm"));
 	m_Cam = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
@@ -69,6 +70,7 @@ void AMyPlayer::BeginPlay()
 	CameraManager->ViewPitchMin = -30.f;
 
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AMyPlayer::OnBeginOverlap);
+	GetCapsuleComponent()->OnComponentEndOverlap.AddDynamic(this, &AMyPlayer::OnEndOverlap);
 
 	m_EtcMesh.Add(Cast<USkeletalMeshComponent>(GetDefaultSubobjectByName(TEXT("Wing"))));
 	m_EtcMesh.Add(Cast<USkeletalMeshComponent>(GetDefaultSubobjectByName(TEXT("Sword"))));
@@ -267,6 +269,8 @@ void AMyPlayer::SetupPlayerInputComponent(class UInputComponent* PlayerInputComp
 	PlayerInputComponent->BindAction(TEXT("SpecialAttack"), EInputEvent::IE_Released, this, &AMyPlayer::SpecialAttackUpAction);
 
 	PlayerInputComponent->BindAction(TEXT("UsePotion"), EInputEvent::IE_Pressed, this, &AMyPlayer::UsePotionAction);
+
+	PlayerInputComponent->BindAction(TEXT("Interact"), EInputEvent::IE_Pressed, this, &AMyPlayer::InteractAction);
 }
 
 void AMyPlayer::ChangeState(EPLAYER_STATE _NextState, bool _Ignore)
@@ -566,8 +570,6 @@ void AMyPlayer::LookUp(float _Scale)
 
 void AMyPlayer::JumpAction()
 {
-	UInventoryManager::GetInst(GetWorld())->AddItem(EITEM_ID::HP_POTION);
-
 	if (IsDamage())
 		return;
 
@@ -738,8 +740,6 @@ void AMyPlayer::LockOnDownAction()
 {
 	m_PressLockOn = true;
 	m_PressLockOnTime = GetWorld()->GetRealTimeSeconds();
-
-	m_Info.CurHP -= 100.f;
 }
 
 void AMyPlayer::LockOnUpAction()
@@ -817,6 +817,16 @@ void AMyPlayer::UsePotionAction()
 	}
 }
 
+void AMyPlayer::InteractAction()
+{
+	UGameplayStatics::OpenLevel(GetWorld(), TEXT("Boss"));
+	return;
+	if (m_Interaction == false)
+		return;
+
+	m_Interaction->Interact();
+}
+
 void AMyPlayer::OnBeginOverlap(UPrimitiveComponent* _PrimitiveComponent, AActor* _OtherActor, UPrimitiveComponent* _OtherComp, int32 _OtherBodyIndex, bool _bFromSweep, const FHitResult& _SweepResult)
 {
 	if (_OtherComp->GetCollisionObjectType() == ECC_GameTraceChannel5)
@@ -828,6 +838,18 @@ void AMyPlayer::OnBeginOverlap(UPrimitiveComponent* _PrimitiveComponent, AActor*
 		AttackInfo.KnockBackPowerXY = 500.f;
 
 		Damage(_OtherActor, &AttackInfo, true);
+	}
+	else if (_OtherComp->GetCollisionObjectType() == ECC_GameTraceChannel10)
+	{
+		m_Interaction = Cast<AInteractionBase>(_OtherActor);
+	}
+}
+
+void AMyPlayer::OnEndOverlap(UPrimitiveComponent* _PrimitiveComponent, AActor* _OtherActor, UPrimitiveComponent* _OtherComp, int32 _OtherBodyIndex)
+{
+	if (_OtherComp->GetCollisionObjectType() == ECC_GameTraceChannel10)
+	{
+		m_Interaction = nullptr;
 	}
 }
 

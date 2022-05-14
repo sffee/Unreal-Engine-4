@@ -4,6 +4,8 @@
 
 #include "PlayerAnimInstance.h"
 
+#include "../Interaction/InteractionBase.h"
+
 #include "CoreMinimal.h"
 #include "../CharacterBase.h"
 #include "MyPlayer.generated.h"
@@ -56,6 +58,8 @@ private:
 
 	bool m_LoopAttackCheck;
 	TArray<AActor*> m_AttackHitActors;
+
+	AInteractionBase* m_Interaction;
 
 public:
 	AMyPlayer();
@@ -142,6 +146,7 @@ private:
 	void SpecialAttackDownAction();
 	void SpecialAttackUpAction();
 	void UsePotionAction();
+	void InteractAction();
 
 private:
 	bool IsPressMoveKey();
@@ -153,4 +158,7 @@ public:
 private:
 	UFUNCTION()
 	void OnBeginOverlap(UPrimitiveComponent* _PrimitiveComponent, AActor* _OtherActor, UPrimitiveComponent* _OtherComp, int32 _OtherBodyIndex, bool _bFromSweep, const FHitResult& _SweepResult);
+
+	UFUNCTION()
+	void OnEndOverlap(UPrimitiveComponent* _PrimitiveComponent, AActor* _OtherActor, UPrimitiveComponent* _OtherComp, int32 _OtherBodyIndex);
 };

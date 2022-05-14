@@ -116,7 +116,10 @@ void AMinions::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo, bool
 			HPBarWidget->SetVisibility(ESlateVisibility::Hidden);
 			
 			if (m_TargetComponent != nullptr)
+			{
 				m_TargetComponent->Death();
+				Cast<ULockOnWidget>(m_LockOnWidgetComponent->GetWidget())->SetLockOnVisible(false);
+			}
 
 			if (_AttackInfo->KnockBackPowerXY == 0.f)
 			{

@@ -1,6 +1,8 @@
 #include "LockOnArmComponent.h"
 #include "TargetComponent.h"
 #include "../Player/MyPlayer.h"
+#include "../EnemyBase.h"
+#include "../UI/LockOnWidget.h"
 
 ULockOnArmComponent::ULockOnArmComponent()
 	: m_IsStart(false)
@@ -99,20 +101,28 @@ void ULockOnArmComponent::LockOn()
 
 	if (NearTarget != nullptr)
 	{
-		if (IsValid(m_Target))
-			m_Target->LockOff();
+		LockOff();
 
 		m_Target = NearTarget;
-		m_Target->LockOn();
+
+		AEnemyBase* Enemy = Cast<AEnemyBase>(m_Target->GetOwner());
+		UWidgetComponent* Widget = Cast<UWidgetComponent>(Enemy->GetDefaultSubobjectByName(TEXT("LockOnWidget")));
+		ULockOnWidget* LockOnWidget = Cast<ULockOnWidget>(Widget->GetWidget());
+		LockOnWidget->SetLockOnVisible(true);
 	}
 }
 
 void ULockOnArmComponent::LockOff()
 {
 	if (IsValid(m_Target))
-		m_Target->LockOff();
+	{
+		AEnemyBase* Enemy = Cast<AEnemyBase>(m_Target->GetOwner());
+		UWidgetComponent* Widget = Cast<UWidgetComponent>(Enemy->GetDefaultSubobjectByName(TEXT("LockOnWidget")));
+		ULockOnWidget* LockOnWidget = Cast<ULockOnWidget>(Widget->GetWidget());
+		LockOnWidget->SetLockOnVisible(false);
 
-	m_Target = nullptr;
+		m_Target = nullptr;
+	}
 }
 
 TArray<UTargetComponent*> ULockOnArmComponent::SearchTarget()

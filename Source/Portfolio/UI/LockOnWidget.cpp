@@ -12,3 +12,8 @@ void ULockOnWidget::NativeTick(const FGeometry& Geometry, float DT)
 {
 	Super::NativeTick(Geometry, DT);
 }
+
+ULockOnWidget::~ULockOnWidget()
+{
+	int a = 0;
+}
