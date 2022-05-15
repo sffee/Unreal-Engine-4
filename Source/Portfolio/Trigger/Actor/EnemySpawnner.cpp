@@ -30,7 +30,7 @@ AEnemyBase* AEnemySpawnner::SpawnStart(TSubclassOf<AEnemyBase>& _SpawnEnemy, flo
 
 	Spawnner->FinishSpawning(Spawnner->GetTransform());
 
-	DrawDebugSphere(GetWorld(), GetActorLocation(), _Range, 40, FColor::Red, false, 1.f);
+	//DrawDebugSphere(GetWorld(), GetActorLocation(), _Range, 40, FColor::Red, false, 1.f);
 
 	return Spawnner;
 }

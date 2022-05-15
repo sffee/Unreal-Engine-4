@@ -37,6 +37,7 @@ private:
 public:
 	void SetItemDataTable(UDataTable* _ItemTable);
 	const FItemDataInfo* GetItemInfo(EITEM_ID _ID);
+	void SetItem(EITEM_ID _ID, int _Count);
 	void AddItem(EITEM_ID _ID, int _Count = 1);
 	bool UseItem(EITEM_ID _ID);
 

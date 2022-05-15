@@ -66,8 +66,6 @@ void AKwang::BeginPlay()
 	BB->SetValueAsFloat(TEXT("Attack4Cooltime"), 5.f);
 	BB->SetValueAsFloat(TEXT("Attack7Cooltime"), 10.f);
 	BB->SetValueAsBool(TEXT("Attacking"), false);
-
-	DrawDebugSphere(GetWorld(), FVector(-4700.f, 15600.f, -6700.f), 2700.f, 40, FColor::Red, false, 100.f);
 }
 
 void AKwang::Tick(float DeltaTime)

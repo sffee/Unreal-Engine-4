@@ -14,5 +14,5 @@ APortal::APortal()
 
 void APortal::Interact()
 {
-	UGameplayStatics::OpenLevel(GetWorld(), TEXT("Boss"));
+	UGameplayStatics::OpenLevel(GetWorld(), FName(*m_MoveLevelName));
 }

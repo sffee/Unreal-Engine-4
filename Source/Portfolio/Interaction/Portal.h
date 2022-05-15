@@ -12,6 +12,9 @@ class PORTFOLIO_API APortal : public AInteractionBase
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UParticleSystemComponent* m_ParticleComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	FString m_MoveLevelName;
 	
 public:
 	APortal();

@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MyPlayer.h"
+
+#include "../MyGameInstance.h"
 #include "../EnemyBase.h"
 #include "../Manager/EffectManager.h"
 #include "../Component/LockOnArmComponent.h"
@@ -77,7 +79,12 @@ void AMyPlayer::BeginPlay()
 
 	JumpMaxCount = 3;
 
-	UInventoryManager::GetInst(GetWorld())->AddItem(EITEM_ID::HP_POTION, 3);
+	UMyGameInstance* GameInstance = Cast<UMyGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	if (GameInstance->IsGameStart() == false)
+	{
+		UInventoryManager::GetInst(GetWorld())->SetItem(EITEM_ID::HP_POTION, 3);
+		GameInstance->GameStart();
+	}
 }
 
 void AMyPlayer::Tick(float DeltaTime)
@@ -512,7 +519,7 @@ void AMyPlayer::MoveFront(float _Scale)
 		m_PressSKey = false;
 	}
 
-	if (m_Moveable == false)
+	if (m_Moveable == false || IsDamage())
 		return;
 
 	FRotator Rotation = Controller->GetControlRotation();
@@ -534,7 +541,7 @@ void AMyPlayer::MoveSide(float _Scale)
 		m_PressAKey = false;
 	}
 	
-	if (m_Moveable == false)
+	if (m_Moveable == false || IsDamage())
 		return;
 
 	const FRotator Rotation = Controller->GetControlRotation();
@@ -819,8 +826,6 @@ void AMyPlayer::UsePotionAction()
 
 void AMyPlayer::InteractAction()
 {
-	UGameplayStatics::OpenLevel(GetWorld(), TEXT("Boss"));
-	return;
 	if (m_Interaction == false)
 		return;
 
@@ -859,9 +864,6 @@ void AMyPlayer::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo, boo
 
 	m_Info.CurHP -= _AttackInfo->Damage;
 
-	if (m_Jump == true)
-		return;
-
 	FRotator Rotator = _Actor->GetActorRotation();
 	Rotator.Roll = 0.f;
 	Rotator.Pitch = 0.f;
@@ -877,17 +879,17 @@ void AMyPlayer::Damage(const AActor* _Actor, const FAttackInfo* _AttackInfo, boo
 
 	LaunchCharacter(HitVector, false, false);
 
-	if (m_State != EPLAYER_STATE::JUMP_DAMAGE_START && m_State != EPLAYER_STATE::JUMP_DAMAGE_LOOP)
+	if (m_State == EPLAYER_STATE::JUMP_DAMAGE_START || m_State == EPLAYER_STATE::JUMP_DAMAGE_LOOP)
+		return;
+
+	if (0.f < _AttackInfo->KnockBackPowerZ || m_Jump)
 	{
-		if (0.f < _AttackInfo->KnockBackPowerZ)
-		{
-			m_Jump = true;
-			ChangeState(EPLAYER_STATE::JUMP_DAMAGE_START);
-		}
-		else
-		{
-			ChangeState(EPLAYER_STATE::DAMAGE, true);
-		}
+		m_Jump = true;
+		ChangeState(EPLAYER_STATE::JUMP_DAMAGE_START);
+	}
+	else
+	{
+		ChangeState(EPLAYER_STATE::DAMAGE, true);
 	}
 }
 

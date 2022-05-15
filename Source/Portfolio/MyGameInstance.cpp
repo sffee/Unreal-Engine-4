@@ -3,6 +3,7 @@
 #include "Manager/InventoryManager.h"
 
 UMyGameInstance::UMyGameInstance()
+	: m_GameStart(false)
 {
 	ConstructorHelpers::FObjectFinder<UDataTable> PlayerTable(TEXT("DataTable'/Game/BlueprintClass/Player/DataTable/PlayerInfoTable.PlayerInfoTable'"));
 	if (PlayerTable.Succeeded())

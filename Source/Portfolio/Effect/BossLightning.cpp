@@ -50,7 +50,7 @@ void ABossLightning::Tick(float DeltaTime)
 				Cast<AMyPlayer>(arrHit[0].Actor)->Damage(this, &AttackInfo);
 			}
 
-			DrawDebugSphere(GetWorld(), vPos, 180.f, 20, FColor::Red, false, 0.5f);
+			//DrawDebugSphere(GetWorld(), vPos, 180.f, 20, FColor::Red, false, 0.5f);
 		}
 	}
 

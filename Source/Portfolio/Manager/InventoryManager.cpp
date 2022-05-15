@@ -68,6 +68,27 @@ const FItemDataInfo* UInventoryManager::GetItemInfo(EITEM_ID _ID)
 	return ItemInfo;
 }
 
+void UInventoryManager::SetItem(EITEM_ID _ID, int _Count)
+{
+	const FItemDataInfo* ItemInfo = GetItemInfo(_ID);
+	if (ItemInfo == nullptr)
+		return;
+
+	FInvenData data;
+	data.Info = ItemInfo;
+	data.Count = _Count;
+
+	ArrInven[(int)ItemInfo->TYPE].Add(_ID, data);
+
+	if (_ID == EITEM_ID::HP_POTION)
+	{
+		APortfolioGameModeBase* GameMode = Cast<APortfolioGameModeBase>(UGameplayStatics::GetGameMode(m_World));
+		UMainHUD* MainHUD = GameMode->GetMainHUD();
+
+		MainHUD->SetPotionCount(ArrInven[(int)EITEM_TYPE::CONSUMABLE][EITEM_ID::HP_POTION].Count);
+	}
+}
+
 void UInventoryManager::AddItem(EITEM_ID _ID, int _Count)
 {
 	const FItemDataInfo* ItemInfo = GetItemInfo(_ID);
